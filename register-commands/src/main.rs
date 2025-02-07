@@ -1,7 +1,7 @@
 use anyhow::Result;
 use reqwest::Client;
-use serde_json::json;
-use workers::constants::commands::COMMANDS;
+use serde_json::{json, Value};
+use constants::commands::COMMANDS;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -24,7 +24,7 @@ async fn main() -> Result<()> {
         200..=299 => {
             println!("Commands registered successfully!");
             println!("registered commands:");
-            for info in res.json::<Vec<serde_json::Value>>().await? {
+            for info in res.json::<Vec<Value>>().await? {
                 println!("{}", info["name"]);
             }
         }

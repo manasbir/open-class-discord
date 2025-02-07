@@ -1,0 +1,23 @@
+[package]
+edition = "2021"
+name = "open-class-discord"
+version = "0.1.0"
+
+[lib]
+name = "workers"
+crate-type = ["cdylib"]
+path = "workers/src/lib.rs"
+
+[[bin]]
+name = "register-commands"
+path = "register-commands/src/main.rs"
+
+[workspace]
+members = [
+    "register-commands",
+    "workers",
+    "constants",
+]
+resolver = "2"
+
+default-members = []

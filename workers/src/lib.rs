@@ -1,10 +1,9 @@
 use axum::{routing::get, Router};
 use tower_service::Service;
 use worker::*;
-pub mod constants;
 
 fn router() -> Router {
-    Router::new().route("/", get(root)).route("/add", get(add))
+    Router::new().route("/", get(root))
 }
 
 #[event(fetch)]
@@ -18,9 +17,5 @@ async fn fetch(
 }
 
 pub async fn root() -> &'static str {
-    "Hello!"
-}
-
-pub async fn add() -> &'static str {
-    "Add!"
+    "Hello Axum!"
 }
