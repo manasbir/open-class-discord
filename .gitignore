@@ -1,8 +1,0 @@
-.env
-
-
-# Added by cargo
-
-/target
-wrangler.toml
-Cargo.lock
