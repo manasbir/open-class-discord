@@ -1,0 +1,18 @@
+[package]
+edition = "2021"
+name = "open-class-discord"
+version = "0.1.0"
+
+[lib]
+name = "constants"
+crate-type = ["rlib"]
+path = "/constants/src/lib.rs"
+
+[workspace]
+members = [
+    "register-commands",
+    "workers",
+    "constants",
+]
+default-members = []
+resolver = "2"
