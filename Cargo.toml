@@ -4,13 +4,9 @@ name = "open-class-discord"
 version = "0.1.0"
 
 [lib]
-name = "workers"
-crate-type = ["cdylib"]
-path = "workers/src/lib.rs"
-
-[[bin]]
-name = "register-commands"
-path = "register-commands/src/main.rs"
+name = "constants"
+crate-type = ["rlib"]
+path = "/constants/src/lib.rs"
 
 [workspace]
 members = [
@@ -18,6 +14,5 @@ members = [
     "workers",
     "constants",
 ]
-resolver = "2"
-
 default-members = []
+resolver = "2"
