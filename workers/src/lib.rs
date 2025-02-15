@@ -54,32 +54,37 @@ pub async fn parse_event(State(state): State<Vars>, headers: HeaderMap, bytes: a
             }
         },
         Err(e) => {
-        console_log!("Failed to parse interaction: {:?}", e);
-        return make_res(StatusCode::BAD_REQUEST, json!({ "type": 4, "data": {"content": "failed to parse interaction"}}))
+            console_log!("Failed to parse interaction: {:?}", e);
+            return make_res(StatusCode::BAD_REQUEST, json!({ "type": 4, "data": {"content": "failed to parse interaction"}}))
         }
     }
 }
 
 pub async fn res(state: Vars, interaction: Interaction) -> Result<Response> {
     match interaction.r#type {
-        1 => { // PING
-            Ok(Response::builder()
-            .status(StatusCode::OK)
-            .header("content-type", "application/json;charset=UTF-8")
-            .body(Body::from(json!({ "type": 1 }).to_string())).unwrap())
-        },
-        2 => {
-            Ok(Response::builder()
-            .status(StatusCode::OK)
-            .header("content-type", "application/json;charset=UTF-8")
-            .body(Body::from(json!({ "type": 4, "data": {"content": "error"}}).to_string())).unwrap())
-        }
+         // PING
+        1 => Ok(make_res(StatusCode::OK, json!({ "type": 1 }))),
+        2 => parse_commands(state, interaction.data).await,
         _ => Ok(Response::builder()
         .status(StatusCode::OK)
         .header("content-type", "application/json;charset=UTF-8")
-        .body(Body::from(json!({ "type": 4, "data": {"content": "error"}}).to_string())).unwrap())
+        .body(Body::from(json!({ "type": 4, "data": {"content": "unknown interaction type"}}).to_string())).unwrap())
     }
 
+}
+
+async fn parse_commands(state: Vars, data: Option<Data>) -> Result<Response> {
+    match data {
+        Some(data) => {
+            match data.r#type {
+                1 => Ok(make_res(StatusCode::OK, json!({ "type": 1 }))),
+                2 => Ok(make_res(StatusCode::OK, json!({ "type": 1 }))),
+                3 => Ok(make_res(StatusCode::OK, json!({ "type": 1 }))),
+                _ => Ok(make_res(StatusCode::OK, json!({ "type": 1 })))
+            }
+        },
+        None => Ok(make_res(StatusCode::OK, json!({ "type": 1, "data": {"content": "unknown interaction type"}})))
+    }
 }
 
 fn verify_sig(public_key: VerifyingKey, headers: HeaderMap, bytes: axum::body::Bytes) -> Result<()> {
