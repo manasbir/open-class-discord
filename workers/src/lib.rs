@@ -5,6 +5,7 @@ use std::{ops::Deref, str::FromStr, u64};
 use axum::{body::Body, extract::State, http::{HeaderMap, HeaderValue, StatusCode}, response::Response, routing::{get,post}, Router};
 use anyhow::{Result, anyhow};
 use constants::{commands::CommandNames, types::{Data, Interaction}};
+use find_class::init_db;
 use helpers::make_res;
 use serde_json::{json, Value};
 use tower_service::Service;
@@ -14,6 +15,7 @@ use ed25519_dalek::{Verifier, VerifyingKey};
 #[derive(Debug, Clone)]
 pub struct Vars {
     public_key: ed25519_dalek::VerifyingKey,
+    env: String,
 }
 
 fn router(state: Vars) -> Router {
@@ -39,12 +41,15 @@ async fn fetch(
 
     let db= _env.d1("DB")?;
     console_log!("{:?}", db.dump().await);
+    init_db(db).await?;
+    let db = _env.d1("DB")?; // fix later
 
     let key: String = _env.var("DISCORD_PUBLIC_KEY").unwrap().to_string();
     let state = Vars {
         public_key: ed25519_dalek::VerifyingKey::from_bytes(
             &hex::decode(key).unwrap().try_into().unwrap(),
         ).unwrap(),
+        env: db.exec("SELECT * from buildings").await.iter().map(|x| {x.as_string().unwrap_or_default()}).collect::<String>(),
     };
     Ok(router(state).call(req).await?)
 }
@@ -93,7 +98,7 @@ async fn parse_commands(state: Vars, data: Option<Data>, timestamp: u64) -> Resu
             match data.name {
                 CommandNames::FindClass => {
                     console_log!("{data:?}");
-                    return Ok(make_res(StatusCode::OK, json!({ "type": 4, "data": {"content": format!("{data:?}, {timestamp:?}")}})));
+                    return Ok(make_res(StatusCode::OK, json!({ "type": 4, "data": {"content": format!("{data:?}, {timestamp:?}, {:#?}", state.env)}})));
                 },
             }
         },

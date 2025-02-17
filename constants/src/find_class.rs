@@ -30,19 +30,19 @@ pub struct OpenClassroomSlots {
     pub data: Vec<OpenClassroomData>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct OpenClassroomData {
     pub room_number: String,
     pub schedule: Vec<Schedule>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct Schedule {
     pub weekday: String,
     pub slots: Vec<Slot>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct Slot {
     pub start_time: String,
     pub end_time: String,
