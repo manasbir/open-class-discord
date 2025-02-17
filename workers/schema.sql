@@ -4,7 +4,7 @@ CREATE TABLE buildings (
 );
 
 CREATE TABLE floors (
-    id SERIAL PRIMARY KEY,
+    floor_id PRIMARY KEY,
     building_code VARCHAR(10) REFERENCES buildings(building_code),
     floor_number INTEGER NOT NULL,
     display_name VARCHAR(50) NOT NULL, -- "4th Floor", "Ground Floor", etc.
@@ -12,7 +12,7 @@ CREATE TABLE floors (
 );
 
 CREATE TABLE rooms (
-    id SERIAL PRIMARY KEY,
+    room_id PRIMARY KEY,
     building_code VARCHAR(10) REFERENCES buildings(building_code),
     floor_id INTEGER REFERENCES floors(id),
     room_number VARCHAR(20) NOT NULL,
@@ -20,7 +20,7 @@ CREATE TABLE rooms (
 );
 
 CREATE TABLE time_slots (
-    id SERIAL PRIMARY KEY,
+    slot_id PRIMARY KEY,
     room_id INTEGER REFERENCES rooms(id),
     weekday VARCHAR(9) NOT NULL,
     start_time TIME NOT NULL,
