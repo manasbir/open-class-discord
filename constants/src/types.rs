@@ -2,6 +2,8 @@ use std::str;
 
 use serde::Deserialize;
 
+use crate::commands::CommandNames;
+
 #[derive(Deserialize)]
  pub struct Interaction {
     // TODO make types enum
@@ -10,18 +12,18 @@ use serde::Deserialize;
     pub data: Option<Data>,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct Data {
     pub id: String,
-    pub name: String,
+    pub name: CommandNames,
     pub options: Vec<Options>,
     // TODO make types enum
     pub r#type: i32,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct Options {
-    pub focused: bool,
+    // pub focused: bool,
     pub name: String,
     // TODO make types enum
     pub r#type: i32,

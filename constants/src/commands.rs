@@ -1,8 +1,8 @@
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize)]
 pub struct Command {
-    pub name: &'static str,
+    pub name: CommandNames,
     pub description: &'static str,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub options: Option<&'static [CommandOptions]>,
@@ -16,9 +16,15 @@ pub struct CommandOptions {
     description: &'static str,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all="snake_case")]
+pub enum CommandNames {
+    FindClass,
+}
+
 pub const COMMANDS: [Command; 1] = [
     Command {
-        name: "findclass",
+        name: CommandNames::FindClass,
         description: "Find a class",
         options: Some(&[
             CommandOptions {

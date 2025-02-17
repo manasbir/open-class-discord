@@ -12,7 +12,7 @@ path = "/constants/src/lib.rs"
 members = [
     "register-commands",
     "workers",
-    "constants",
+    "constants", 
 ]
 default-members = []
 resolver = "2"
