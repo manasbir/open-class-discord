@@ -3,6 +3,18 @@ pub const FIND_CLASS_URL: &str = "https://portalapi2.uwaterloo.ca/v2/map/OpenCla
 use serde::{Deserialize, Deserializer};
 use serde_json::{json, Value};
 
+
+#[derive(Debug, Deserialize)]
+pub struct SQLRes {
+    pub building_code: String,
+    pub day: String,
+    pub floor_number: i32,
+    pub room_number: String,
+    pub start_time: String,
+    pub end_time: String,
+
+}
+
 #[derive(Debug, Deserialize)]
 pub struct FindClassRes {
     pub data: FindClassResData,
@@ -19,7 +31,7 @@ pub struct Features {
     pub properties: Properties,
 }
 
-#[derive(Debug/* , Deserialize */)]
+#[derive(Debug)]
 pub struct Properties {
     pub building_name: String,
     pub building_code: String,
@@ -41,7 +53,7 @@ impl<'de> serde::Deserialize<'de> for Properties {
         let outer = Outer::deserialize(deserializer)?;
 
         match outer.open_classroom_slots {
-            None =>  return Ok(Properties { building_name: outer.building_name, building_code: format!("{:?}1111{}", outer.open_classroom_slots, outer.building_code), open_classroom_slots: None }),
+            None =>  return Ok(Properties { building_name: outer.building_name, building_code: outer.building_code, open_classroom_slots: None }),
             Some(open_classroom_slots) => {
                 // Parse the inner JSONstring
                 let inner_value: Value = serde_json::from_str(&open_classroom_slots)
