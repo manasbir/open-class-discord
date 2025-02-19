@@ -49,13 +49,13 @@ pub(crate) fn build_query(
         params.push(room);
     }
 
-    // conditions.push("AND t.start_time >= ? ");
-    // params.push(start_time);
+    conditions.push("AND t.start_time >= ? ");
+    params.push(start_time);
 
-    // if let Some(end_time) = end_time {
-    //     conditions.push("AND t.end_time >= ? ");
-    //     params.push(end_time);
-    // }
+    if let Some(end_time) = end_time {
+        conditions.push("AND t.end_time >= ? ");
+        params.push(end_time);
+    }
 
     let query = format!(
         "SELECT DISTINCT r.room_id, r.floor_id, r.building_code, r.room_number, t.start_time, t.end_time, t.day
