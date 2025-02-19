@@ -3,6 +3,7 @@ pub mod find_class;
 
 use std::{cell::RefCell, io::{Bytes, Read}, ops::Deref, rc::Rc, str::FromStr, sync::{Arc, RwLock}, u64};
 use anyhow::{Result, anyhow};
+use chrono::{DateTime, Local, NaiveDateTime, NaiveTime, Timelike};
 use constants::{commands::CommandNames, interaction::{Data, Interaction}};
 use find_class::init_db;
 use helpers::{build_query, make_res};
@@ -42,7 +43,7 @@ async fn fetch(
         Ok(res) => Ok(res),
         Err(e) => {
             console_log!("Failed to respond to interaction: {:?}", e);
-            make_res(StatusCode::OK, json!({ "type": 4, "data": {"content": format!("failed to respond to interaction: {e}")}}))
+            make_res(StatusCode::OK, json!({ "type": 4, "data": {"content": format!("failed to respond to interaction: \n ```{e}```")}}))
         }
     }
 }
@@ -84,7 +85,7 @@ async fn parse_commands(env: Env, interaction: Interaction) -> Result<Response> 
         Some(data) => {
             match data.name {
                 CommandNames::Init => init_command(env, &interaction).await,
-                CommandNames::FindClass => find_class(env, &interaction).await,
+                CommandNames::FindClass => find_class(env, interaction).await,
             }
         },
         None => make_res(StatusCode::OK, json!({ "type": 4, "data": {"content": "unknown interaction type"}}))
@@ -112,34 +113,52 @@ async fn init_command(env: Env, interaction: &Interaction) -> Result<Response> {
     make_res(StatusCode::OK, json!({ "type": 4, "data": {"content": "success"}}))
 }
 
-async fn find_class(env: Env, interaction: &Interaction) -> Result<Response> {
+async fn find_class(env: Env, interaction: Interaction) -> Result<Response> {
     let db = env.d1("DB")?;
 
-    let options = interaction.data.as_ref().unwrap().options.as_ref().unwrap();
+    let options = interaction.data.unwrap().options;
 
-    let mut building: Option<String> = None;
-    let mut floor: Option<String> = None;
-    let mut room: Option<String> = None;
-    let mut time: Option<String> = None;
-
-    for option in options {
-        match option.name.as_str() {
-            "building" => building = Some(option.value.clone()),
-            "floor" => floor = Some(option.value.clone()),
-            "room" => room = Some(option.value.clone()),
-            "time" => time = Some(option.value.clone()),
-            _ => return make_res(StatusCode::OK, json!({ "type": 4, "data": {"content": "unknown option"}}))
+    let building = match options.get("building") {
+        Some(building) => Some(building.value.clone()),
+        None => None,
+    };
+    let floor = match options.get("floor") {
+        Some(floor) => Some(floor.value.clone()),
+        None => None,
+    };
+    let room = match options.get("room") {
+        Some(room) => Some(room.value.clone()),
+        None => None,
+    };
+    let start_time = match options.get("start") {
+        Some(time) => time.value.clone(),
+        None => {
+            let time = Local::now().time();
+            if time.minute() < 10 {
+                format!("{}:0{}", time.hour(), time.minute())
+            } else {
+                format!("{}:{}", time.hour(), time.minute())
+            }
         }
-    }
-
-    let (query, params) = build_query(building, floor, room, time);
-    let mut stmt = db.prepare(&query);
+    };
     
-    // Bind parameters
-    for (i, param) in params.iter().enumerate() {
+    let end_time = match options.get("end") {
+        Some(end_time) => Some(end_time.value.clone()),
+        None => None,
+    };
+
+
+    let (query, params) = build_query(building, floor, room, start_time, end_time);
+    let mut stmt = db.prepare(&query);
+
+    
+    for param in params.iter() {
+        console_log!("{:?}", param);
         stmt = stmt.bind(&[param.into()])?;
     }
     
+    console_log!("{:?}", stmt.inner());
+
     // Execute query
     let results = stmt.all().await?;
     let res: Vec<Value> = results.results()?;
