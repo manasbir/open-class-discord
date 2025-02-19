@@ -20,9 +20,10 @@ pub struct CommandOptions {
 #[serde(rename_all="snake_case")]
 pub enum CommandNames {
     FindClass,
+    Init
 }
 
-pub const COMMANDS: [Command; 1] = [
+pub const COMMANDS: [Command; 2] = [
     Command {
         name: CommandNames::FindClass,
         description: "Find a class",
@@ -31,14 +32,32 @@ pub const COMMANDS: [Command; 1] = [
                 r#type: 3,
                 name: "building",
                 autocomplete: true,
-                description: "building (concat) + optional floor nums",
+                description: "building (concat)",
+            },
+            CommandOptions {
+                r#type: 3,
+                name: "floor number",
+                autocomplete: false,
+                description: "floor num",
+            },
+            CommandOptions {
+                r#type: 3,
+                name: "room number",
+                autocomplete: false,
+                description: "room num",
             },
             CommandOptions {
                 r#type: 3,
                 name: "time",
                 autocomplete: false,
-                description: "The class to find + optional floor nums",
+                description: "time",
             },
+            
         ]),
+    },
+    Command {
+        name: CommandNames::Init,
+        description: "Initialize the bot",
+        options: None,
     },
 ];

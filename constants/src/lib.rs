@@ -1,4 +1,4 @@
 pub mod commands;
-pub mod types;
+pub mod interaction;
 pub mod find_class;
 pub mod schema;
