@@ -3,7 +3,6 @@ use constants::{
     find_class::{FindClassRes, FIND_CLASS_URL},
     schema::{BuildingInfo, FloorInfo, RoomInfo, TimeSlots, ToID},
 };
-use serde_json::Value;
 use std::{collections::HashSet, ops::Deref};
 use worker::{console_log, D1Database, D1PreparedStatement};
 
@@ -84,9 +83,9 @@ pub async fn init_db(db: &D1Database) -> Result<()> {
     console_log!("Inserting data");
 
     // Insert data
-    insert_buildings(&db, &mut statements, &buildings)?;
-    insert_rooms_and_floors(&db, &mut statements, &rooms)?;
-    insert_time_slots(&db, &mut statements, &time_slots)?;
+    insert_buildings(db, &mut statements, &buildings)?;
+    insert_rooms_and_floors(db, &mut statements, &rooms)?;
+    insert_time_slots(db, &mut statements, &time_slots)?;
 
     db.batch(statements).await?;
 

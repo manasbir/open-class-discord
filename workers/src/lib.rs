@@ -2,27 +2,21 @@ pub mod find_class;
 mod helpers;
 
 use anyhow::{anyhow, Result};
-use chrono::{DateTime, Local, NaiveDateTime, NaiveTime, Timelike};
+use chrono::{Local, Timelike};
 use constants::{
     commands::CommandNames,
-    interaction::{Data, Interaction},
+    interaction::Interaction,
 };
 use ed25519_dalek::{Verifier, VerifyingKey};
 use find_class::init_db;
 use helpers::{build_query, make_res};
-use reqwest::{header, StatusCode};
-use serde::de::Deserialize;
+use reqwest::StatusCode;
 use serde_json::{json, Value};
 use std::{
-    cell::RefCell,
-    io::{Bytes, Read},
-    ops::Deref,
-    rc::Rc,
+    io::Read,
     str::FromStr,
-    sync::{Arc, RwLock},
-    u64,
+    sync::Arc,
 };
-use tower_service::Service;
 use worker::*;
 
 #[derive(Clone)]
@@ -148,18 +142,9 @@ async fn find_class(env: Env, interaction: Interaction) -> Result<Response> {
 
     let options = interaction.data.unwrap().options;
 
-    let building = match options.get("building") {
-        Some(building) => Some(building.value.clone()),
-        None => None,
-    };
-    let floor = match options.get("floor") {
-        Some(floor) => Some(floor.value.clone()),
-        None => None,
-    };
-    let room = match options.get("room") {
-        Some(room) => Some(room.value.clone()),
-        None => None,
-    };
+    let building = options.get("building").map(|building| building.value.clone());
+    let floor = options.get("floor").map(|floor| floor.value.clone());
+    let room = options.get("room").map(|room| room.value.clone());
     let start_time = match options.get("start") {
         Some(time) => time.value.clone(),
         None => {
@@ -172,10 +157,7 @@ async fn find_class(env: Env, interaction: Interaction) -> Result<Response> {
         }
     };
 
-    let end_time = match options.get("end") {
-        Some(end_time) => Some(end_time.value.clone()),
-        None => None,
-    };
+    let end_time = options.get("end").map(|end_time| end_time.value.clone());
 
     let (query, params) = build_query(building, floor, room, start_time, end_time);
     let mut stmt = db.prepare(&query);

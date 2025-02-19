@@ -1,7 +1,7 @@
 use anyhow::Result;
 use reqwest::StatusCode;
 use serde_json::Value;
-use worker::{Response, ResponseBody};
+use worker::Response;
 
 pub(crate) fn make_res(code: StatusCode, body: Value) -> Result<Response> {
     Ok(Response::builder()
