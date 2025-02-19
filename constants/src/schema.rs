@@ -40,7 +40,7 @@ impl ToID for FloorInfo {
 
 impl ToID for RoomInfo {
     fn to_id(&self) -> String {
-        format!("{}-{}", self.building_code, self.room_number)
+        format!("{}-{}", self.floor_id, self.room_number)
     }
 }
 

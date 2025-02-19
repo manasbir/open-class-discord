@@ -1,10 +1,12 @@
 use std::{collections::HashSet, ops::Deref};
 use constants::{find_class::{FindClassRes, FIND_CLASS_URL}, schema::{BuildingInfo, FloorInfo, RoomInfo, TimeSlots, ToID}};
+use serde_json::Value;
 use worker::{console_log, D1Database, D1PreparedStatement};
 use anyhow::{Context, Result};
 
 pub async fn init_db(db: &D1Database) -> Result<()> {
     console_log!("Initializing database");
+
     let features = reqwest::get(FIND_CLASS_URL)
         .await
         .context("Failed to fetch data")?
@@ -12,6 +14,8 @@ pub async fn init_db(db: &D1Database) -> Result<()> {
         .await
         .context("Failed to parse JSON")?
         .data.features;
+
+    // console_log!("Fetched data {:#?}", features);
 
 
     let mut statements = Vec::new();
@@ -58,21 +62,20 @@ pub async fn init_db(db: &D1Database) -> Result<()> {
         buildings.push(building);
     }
 
-    // Insert data
-    insert_buildings(&db, &mut statements, &buildings).await?;
-    insert_rooms_and_floors(&db, &mut statements, &rooms).await?;
-    insert_time_slots(&db, &mut statements, &time_slots).await?;
+    console_log!("Inserting data");
 
-    console_log!("Executing batch");
-    for tx in db.batch(statements).await? {
-        console_log!("Result: {:?}", tx.success());
-    }
+    // Insert data
+    insert_buildings(&db, &mut statements, &buildings)?;
+    insert_rooms_and_floors(&db, &mut statements, &rooms)?;
+    insert_time_slots(&db, &mut statements, &time_slots)?;
+
+   db.batch(statements).await?;
 
     Ok(())
 }
 
 
-async fn insert_buildings(db: &D1Database, statements: &mut Vec<D1PreparedStatement>, buildings: &[BuildingInfo]) -> Result<()> {
+fn insert_buildings(db: &D1Database, statements: &mut Vec<D1PreparedStatement>, buildings: &[BuildingInfo]) -> Result<()> {
     for building in buildings {
         let stmt = db.prepare(
             "INSERT INTO buildings (building_code, primary_name)
@@ -86,61 +89,71 @@ async fn insert_buildings(db: &D1Database, statements: &mut Vec<D1PreparedStatem
         let stmt = stmt.bind(&[code.into(), name.into()])?;
         statements.push(stmt);
     }
+
+    console_log!("Inserted buildings");
+
     Ok(())
 }
 
-async fn insert_rooms_and_floors(db: &D1Database,statements: &mut Vec<D1PreparedStatement>, rooms: &[RoomInfo]) -> Result<()> {
+fn insert_rooms_and_floors(db: &D1Database,statements: &mut Vec<D1PreparedStatement>, rooms: &[RoomInfo]) -> Result<()> {
     let mut floors = HashSet::new();
     for room in rooms {
-        let stmt = db.prepare(
-            "INSERT INTO rooms (room_id, building_code, floor_id, room_number)
-            VALUES (?1, (SELECT id FROM floors WHERE building_code = ?1 AND floor_number = ?2), ?3)
-            ON CONFLICT (building_code, room_number) DO UPDATE
-            SET floor_id = excluded.floor_id",
-        );
 
         let floor_id = room.floor_id.deref();
         let room_number = room.room_number.as_str();
         let building_code = room.building_code.as_str();
+        let floor_number = room.room_number.chars().next().unwrap().to_digit(10).unwrap();
+
+        if !floors.contains(floor_id) {
+            floors.insert(floor_id);
+
+            let stmt = db.prepare(
+                "INSERT INTO floors (floor_id, building_code, floor_number)
+                VALUES (?1, ?2, ?3)
+                ON CONFLICT (building_code, floor_number) DO NOTHING",
+            );
+
+            let stmt = stmt.bind(&[
+                floor_id.into(),
+                building_code.into(),
+                floor_number.into(),
+            ])?;
+
+            statements.push(stmt);
+        }
+        
+    
+
+        let stmt = db.prepare(
+            "INSERT INTO rooms (room_id, building_code, floor_id, room_number)
+            VALUES (?1, ?2, ?3, ?4)",
+        );
+
         
         let stmt = stmt.bind(&[
             room.to_id().into(),
             building_code.into(),
             floor_id.into(),
             room_number.into()
-        ])?;
-
-        if floors.contains(floor_id) {
-            floors.insert(floor_id);
-        } else {
-            let stmt = db.prepare(
-                "INSERT INTO floors (floor_id, building_code, floor_number)
-                VALUES (?1, ?2, ?3)
-                ON CONFLICT (building_code, floor_number) DO NOTHING",
-            );
-            let stmt = stmt.bind(&[
-                floor_id.into(),
-                building_code.into(),
-                room.floor_id.chars().next().unwrap().to_digit(10).unwrap().into()
-            ])?;
-            statements.push(stmt);
-        }
+        ])?; 
 
         statements.push(stmt);
     }
+
     Ok(())
 }
 
-async fn insert_time_slots(db: &D1Database, statements: &mut Vec<D1PreparedStatement>,slots: &[TimeSlots]) -> Result<()> {
+fn insert_time_slots(db: &D1Database, statements: &mut Vec<D1PreparedStatement>,slots: &[TimeSlots]) -> Result<()> {
     for slot in slots {
 
         let stmt = db.prepare(
             "INSERT INTO time_slots (slot_id, room_id, day, start_time, end_time)
             VALUES (?1, ?2, ?3, ?4, ?5)
-            ON CONFLICT (room_id, day, start_time, end_time) DO UPDATE",
-        );
+            ON CONFLICT (slot_id) DO UPDATE 
+            SET start_time = excluded.start_time, end_time = excluded.end_time");
 
         let stmt = stmt.bind(&[
+            slot.to_id().into(),
             slot.room_id.as_str().into(),
             slot.day.as_str().into(),
             slot.start_time.as_str().into(),
@@ -149,6 +162,9 @@ async fn insert_time_slots(db: &D1Database, statements: &mut Vec<D1PreparedState
 
         statements.push(stmt);
     }
+
+    console_log!("Inserted time slots");
+
     Ok(())
 }
 
