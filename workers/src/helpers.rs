@@ -2,7 +2,6 @@ use anyhow::Result;
 use reqwest::StatusCode;
 use serde_json::Value;
 use worker::{Response, ResponseBody};
-use crate::wasm_bindgen::JsValue;
 
 pub(crate) fn make_res(code: StatusCode, body: Value) -> Result<Response> {
     Ok(Response::builder()
@@ -26,32 +25,32 @@ pub(crate) fn build_query(
     floor: Option<String>,
     room: Option<String>,
     start_time: String,
-    end_time: Option<String>
-) -> (String, Vec<JsValue>) {
+    end_time: Option<String>,
+) -> (String, Vec<String>) {
     let mut conditions = Vec::new();
     let mut params = Vec::new();
 
     if let Some(building) = building {
         conditions.push("AND b.building_code = ?");
-        params.push(building.into());
+        params.push(building);
     }
 
     if let Some(floor) = floor {
         conditions.push("AND f.floor_number = ?");
-        params.push(floor.into());
+        params.push(floor);
     }
 
     if let Some(room) = room {
         conditions.push("AND r.room_number = ?");
-        params.push(room.into());
+        params.push(room);
     }
 
-    conditions.push("AND t.start_time >= ?");
-    params.push(start_time.into());
+    conditions.push("AND t.start_time >= ? ");
+    params.push(start_time);
 
     if let Some(end_time) = end_time {
-        conditions.push("AND t.end_time >= ?");
-        params.push(end_time.into());
+        conditions.push("AND t.end_time >= ? ");
+        params.push(end_time);
     }
 
     let query = format!(
