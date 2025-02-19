@@ -163,12 +163,14 @@ async fn find_class(env: Env, interaction: Interaction) -> Result<Response> {
 
 
     let res = results.results::<SQLRes>()?;
+    console_log!("{:#?}", res);
 
     let open_buildings = sql_res_to_open_buildings(res);
 
 
     make_res(
         StatusCode::OK,
-        make_embed(open_buildings),
+        // json!({ "type": 4, "data": {"content": "success"}}),
+        make_embed(open_buildings.iter().take(5).collect()),
     )
 }
