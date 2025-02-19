@@ -2,6 +2,7 @@ use anyhow::Result;
 use reqwest::StatusCode;
 use serde_json::Value;
 use worker::{Response, ResponseBody};
+use crate::wasm_bindgen::JsValue;
 
 pub(crate) fn make_res(code: StatusCode, body: Value) -> Result<Response> {
     Ok(Response::builder()
@@ -24,31 +25,33 @@ pub(crate) fn build_query(
     building: Option<String>,
     floor: Option<String>,
     room: Option<String>,
-    time: Option<String>,
-) -> (String, Vec<String>) {
+    start_time: String,
+    end_time: Option<String>
+) -> (String, Vec<JsValue>) {
     let mut conditions = Vec::new();
     let mut params = Vec::new();
 
     if let Some(building) = building {
         conditions.push("AND b.building_code = ?");
-        params.push(building);
+        params.push(building.into());
     }
 
     if let Some(floor) = floor {
         conditions.push("AND f.floor_number = ?");
-        params.push(floor);
+        params.push(floor.into());
     }
 
     if let Some(room) = room {
         conditions.push("AND r.room_number = ?");
-        params.push(room);
+        params.push(room.into());
     }
 
-    if let Some(time) = time {
-        // Assuming time format is "HH:MM"
-        conditions.push("AND t.start_time >= ? AND t.end_time <= ?");
-        params.push(time.clone());
-        params.push(time);
+    conditions.push("AND t.start_time >= ?");
+    params.push(start_time.into());
+
+    if let Some(end_time) = end_time {
+        conditions.push("AND t.end_time >= ?");
+        params.push(end_time.into());
     }
 
     let query = format!(
@@ -58,7 +61,7 @@ pub(crate) fn build_query(
          JOIN floors f ON r.floor_id = f.floor_id
          JOIN buildings b ON b.building_code = r.building_code
          WHERE 1=1 {}
-         ORDER BY b.building_code, r.room_number, t.day, t.start_time",
+         ORDER BY t.end_time DESC, t.start_time DESC",
         conditions.join(" ")
     );
 
