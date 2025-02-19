@@ -7,3 +7,13 @@ pub(crate) fn make_res(code: StatusCode, body: Value) -> Response {
         .header("content-type", "application/json;charset=UTF-8")
         .body(Body::from(body.to_string())).unwrap()
 }
+
+pub(crate) fn ordinal(n: i32) -> String {
+    let suffix = match n % 10 {
+        1 => "st",
+        2 => "nd",
+        3 => "rd",
+        _ => "th",
+    };
+    format!("{}{}", n, suffix)
+}

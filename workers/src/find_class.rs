@@ -1,133 +1,154 @@
-
-
-use constants::find_class::{FindClassRes, FIND_CLASS_URL};
+use std::{collections::HashSet, ops::Deref};
+use constants::{find_class::{FindClassRes, FIND_CLASS_URL}, schema::{BuildingInfo, FloorInfo, RoomInfo, TimeSlots, ToID}};
 use worker::{console_log, D1Database, D1PreparedStatement};
-use anyhow::Result;
+use anyhow::{Context, Result};
+
+pub async fn init_db(db: &D1Database) -> Result<()> {
+    console_log!("Initializing database");
+    let features = reqwest::get(FIND_CLASS_URL)
+        .await
+        .context("Failed to fetch data")?
+        .json::<FindClassRes>()
+        .await
+        .context("Failed to parse JSON")?
+        .data.features;
 
 
-pub async fn init_db(db: D1Database) -> Result<()> {
-    let mut statements  = Vec::new();
-    let features = reqwest::get(FIND_CLASS_URL).await?.json::<FindClassRes>().await?.data.features;
-
+    let mut statements = Vec::new();
     let mut buildings = Vec::new();
-    let mut floors = Vec::new();
     let mut rooms = Vec::new();
     let mut time_slots = Vec::new();
-    features.iter().for_each( |feat| {
-        let code = &feat.properties.building_code;
-        let name = &feat.properties.building_name;
-        buildings.push(format!("({},{})", code, name));
-        let slots = match &feat.properties.open_classroom_slots {
-            Some(class_info) => &class_info.data,
-            None => return,
-        };
 
+    for feature in features {
+        let props = feature.properties;
+        
+        // Process building
+        let building = BuildingInfo { building_code: props.building_code, primary_name: props.building_name };
+        let building_id = building.to_id();
+        // Process rooms and floors
+        if let Some(slots) = props.open_classroom_slots {
+            for room_data in slots.data {
+                let floor_number = room_data.room_number.chars()
+                    .next().unwrap().to_digit(10).unwrap();
+                
+                let floor_id = FloorInfo { building_code: building_id.clone(), floor_number }.to_id();
+                let room = RoomInfo { building_code: building_id.clone(), floor_id, room_number: room_data.room_number };
+                let room_id = room.to_id();
 
-        for slot in slots {
-            let room_number = &slot.room_number;
-            let schedule = &slot.schedule;
-            let floor = match room_number.chars().next() {
-                Some(c) => c.to_string(),
-                None => "-1".to_string(),
-            };
-
-            let floor_id = format!("{}_{}", code, floor);
-            let room_id = format!("{}_{}", code, room_number);
-
-            floors.push(format!("({},{},{},{})", floor_id, code, floor, floor));
-            rooms.push(format!("({},{},{},{})", room_id, code, floor_id, room_number));
-
-            for sched in schedule{
-                let day = &sched.weekday;
-                let slots = &sched.slots;
-                slots.iter().enumerate().for_each( |(idx, slot)| {
-                    let slot_id = format!("{}_{}_{}", room_id, day, idx);
-                    time_slots.push(format!("({},{},{},{},{})", slot_id, room_id, day, slot.start_time,  slot.end_time));
-                });
+                // Process time slots
+                for (idx, schedule) in room_data.schedule.iter().enumerate() {
+                    let day = schedule.weekday.clone();
+                    
+                    for slot in schedule.slots.clone() {
+                        let start_time = slot.start_time;
+                        let end_time = slot.end_time;
+                        let slot = TimeSlots {
+                            idx: idx.try_into().unwrap(),
+                            room_id: room_id.clone(),
+                            day: day.clone(),
+                            start_time,
+                            end_time,
+                        };
+                        time_slots.push(slot);
+                    }
+                }
+                rooms.push(room);
             }
         }
-    });
+        buildings.push(building);
+    }
 
-    insert_buildings(&db, &mut statements, buildings)?;
-    insert_floors(&db, &mut statements, floors)?;
-    insert_rooms(&db, &mut statements, rooms)?;
-    insert_time_slots(&db, &mut statements, time_slots)?;
+    // Insert data
+    insert_buildings(&db, &mut statements, &buildings).await?;
+    insert_rooms_and_floors(&db, &mut statements, &rooms).await?;
+    insert_time_slots(&db, &mut statements, &time_slots).await?;
 
-    let res = db.batch(statements).await?;
-
-    res.iter().for_each( |res| {
-        console_log!("{:?}", res.results::<String>());
-    });
-
-    Ok(())
-}
-
-pub fn insert_buildings(db: &D1Database, statements: &mut Vec<D1PreparedStatement>, buildings: Vec<String>) -> Result<()> {
-    let buildings = buildings.join("\n");
-
-    console_log!("{:?}", buildings);
-    
-    let insert_buildings = db.prepare(format!(r#"
-        INSERT INTO buildings (building_code, primary_name) 
-        VALUES 
-        {}
-        ON CONFLICT (building_code) DO UPDATE 
-        SET primary_name = EXCLUDED.primary_name;
-    "#, buildings));
-
-    statements.push(insert_buildings);
+    console_log!("Executing batch");
+    for tx in db.batch(statements).await? {
+        console_log!("Result: {:?}", tx.success());
+    }
 
     Ok(())
 }
 
-pub fn insert_floors(db: &D1Database, statements: &mut Vec<D1PreparedStatement>, floors: Vec<String>) -> Result<()> {
-    let floors = floors.join("\n");
 
-    console_log!("{:?}", floors);
-    
-    let insert_floors = db.prepare(format!(r#"
-        INSERT INTO floors (floor_id, building_code, floor_number, floor_name) 
-        VALUES 
-        {}
-        ON CONFLICT (floor_id) DO UPDATE 
-        SET floor_name = EXCLUDED.floor_name;
-    "#, floors));
+async fn insert_buildings(db: &D1Database, statements: &mut Vec<D1PreparedStatement>, buildings: &[BuildingInfo]) -> Result<()> {
+    for building in buildings {
+        let stmt = db.prepare(
+            "INSERT INTO buildings (building_code, primary_name)
+            VALUES (?1, ?2)
+            ON CONFLICT (building_code) DO UPDATE
+            SET primary_name = excluded.primary_name",
+        );
 
-    statements.push(insert_floors);
-
+        let code = building.building_code.as_str();
+        let name = building.primary_name.as_str();
+        let stmt = stmt.bind(&[code.into(), name.into()])?;
+        statements.push(stmt);
+    }
     Ok(())
 }
 
-pub fn insert_rooms(db: &D1Database, statements: &mut Vec<D1PreparedStatement>, rooms: Vec<String>) -> Result<()> {
-    let rooms = rooms.join("\n");
+async fn insert_rooms_and_floors(db: &D1Database,statements: &mut Vec<D1PreparedStatement>, rooms: &[RoomInfo]) -> Result<()> {
+    let mut floors = HashSet::new();
+    for room in rooms {
+        let stmt = db.prepare(
+            "INSERT INTO rooms (room_id, building_code, floor_id, room_number)
+            VALUES (?1, (SELECT id FROM floors WHERE building_code = ?1 AND floor_number = ?2), ?3)
+            ON CONFLICT (building_code, room_number) DO UPDATE
+            SET floor_id = excluded.floor_id",
+        );
 
-    console_log!("{:?}", rooms);
-    
-    let insert_rooms = db.prepare(format!(r#"
-        INSERT INTO rooms (room_id, building_code, floor_id, room_number) 
-        VALUES 
-        {}
-        ON CONFLICT (room_id) DO UPDATE 
-        SET room_number = EXCLUDED.room_number;
-    "#, rooms));
+        let floor_id = room.floor_id.deref();
+        let room_number = room.room_number.as_str();
+        let building_code = room.building_code.as_str();
+        
+        let stmt = stmt.bind(&[
+            room.to_id().into(),
+            building_code.into(),
+            floor_id.into(),
+            room_number.into()
+        ])?;
 
-    statements.push(insert_rooms);
+        if floors.contains(floor_id) {
+            floors.insert(floor_id);
+        } else {
+            let stmt = db.prepare(
+                "INSERT INTO floors (floor_id, building_code, floor_number)
+                VALUES (?1, ?2, ?3)
+                ON CONFLICT (building_code, floor_number) DO NOTHING",
+            );
+            let stmt = stmt.bind(&[
+                floor_id.into(),
+                building_code.into(),
+                room.floor_id.chars().next().unwrap().to_digit(10).unwrap().into()
+            ])?;
+            statements.push(stmt);
+        }
 
+        statements.push(stmt);
+    }
     Ok(())
 }
 
-pub fn insert_time_slots(db: &D1Database, statements: &mut Vec<D1PreparedStatement>, time_slots:Vec<String>) -> Result<()> {
-    let time_slots = time_slots.join("\n");
-    console_log!("{:?}", time_slots);
-    
-    let insert_time_slots = db.prepare(format!(r#"
-        INSERT INTO time_slots (time_slot_id, room_id, day, start_time, end_time) 
-        VALUES 
-        {}
-        ON CONFLICT (time_slot_id) DO UPDATE;
-    "#, time_slots));
+async fn insert_time_slots(db: &D1Database, statements: &mut Vec<D1PreparedStatement>,slots: &[TimeSlots]) -> Result<()> {
+    for slot in slots {
 
-    statements.push(insert_time_slots);
+        let stmt = db.prepare(
+            "INSERT INTO time_slots (slot_id, room_id, day, start_time, end_time)
+            VALUES (?1, ?2, ?3, ?4, ?5)
+            ON CONFLICT (room_id, day, start_time, end_time) DO UPDATE",
+        );
 
+        let stmt = stmt.bind(&[
+            slot.room_id.as_str().into(),
+            slot.day.as_str().into(),
+            slot.start_time.as_str().into(),
+            slot.end_time.as_str().into(),
+        ])?;
+
+        statements.push(stmt);
+    }
     Ok(())
 }
+

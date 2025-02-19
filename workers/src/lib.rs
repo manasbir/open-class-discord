@@ -1,28 +1,33 @@
 mod helpers;
 pub mod find_class;
-use core::time;
-use std::{ops::Deref, str::FromStr, u64};
+
+use std::{cell::RefCell, ops::Deref, rc::Rc, str::FromStr, sync::{Arc, RwLock}, u64};
+
 use axum::{body::Body, extract::State, http::{HeaderMap, HeaderValue, StatusCode}, response::Response, routing::{get,post}, Router};
 use anyhow::{Result, anyhow};
 use constants::{commands::CommandNames, types::{Data, Interaction}};
 use find_class::init_db;
 use helpers::make_res;
 use serde_json::{json, Value};
+use tokio::sync::Mutex;
 use tower_service::Service;
 use worker::*;
 use ed25519_dalek::{Verifier, VerifyingKey};
 
-#[derive(Debug, Clone)]
+
+#[derive(Clone)]
 pub struct Vars {
     public_key: ed25519_dalek::VerifyingKey,
-    env: String,
+    db: Arc<D1Database>,
 }
+
+unsafe impl Send for Vars {}
+unsafe impl Sync for Vars {}
 
 fn router(state: Vars) -> Router {
     Router::new()
     .route("/", post(parse_event))
-    .route("/", get(parse_event))
-    .with_state(state)
+    .with_state(state.clone())
 }
 
 #[event(scheduled)]
@@ -31,28 +36,34 @@ pub async fn scheduled(event: ScheduledEvent, env: Env, _ctx: ScheduleContext) {
     console_log!("scheduled event");
 }
 
-#[event(fetch)]
-async fn fetch(
-    req: HttpRequest,
-    _env: Env,
-    _ctx: Context,
-) -> Result<axum::http::Response<axum::body::Body>> {
-    console_error_panic_hook::set_once();
+// #[event(fetch)]
+// async fn fetch(
+//     req: HttpRequest,
+//     _env: Env,
+//     _ctx: Context,
+// ) -> Result<axum::http::Response<axum::body::Body>> {
+//     console_error_panic_hook::set_once();
 
-    let db= _env.d1("DB")?;
-    console_log!("{:?}", db.dump().await);
-    init_db(db).await?;
-    let db = _env.d1("DB")?; // fix later
+//     let db= _env.d1("DB")?;
+//     console_log!("{:?}", db.dump().await);
+//     init_db(&db).await?;
 
-    let key: String = _env.var("DISCORD_PUBLIC_KEY").unwrap().to_string();
-    let state = Vars {
-        public_key: ed25519_dalek::VerifyingKey::from_bytes(
-            &hex::decode(key).unwrap().try_into().unwrap(),
-        ).unwrap(),
-        env: db.exec("SELECT * from buildings").await.iter().map(|x| {x.as_string().unwrap_or_default()}).collect::<String>(),
-    };
-    Ok(router(state).call(req).await?)
-}
+//     let key: String = _env.var("DISCORD_PUBLIC_KEY").unwrap().to_string();
+
+//     let stmt = db.prepare("SELECT building_code FROM buildings");
+//     let res = db.batch(vec![stmt]).await?;
+
+//     let env: Vec<Value> = res[0].results().unwrap_or_default();
+
+
+//     let state = Vars {
+//         public_key: ed25519_dalek::VerifyingKey::from_bytes(
+//             &hex::decode(key).unwrap().try_into().unwrap(),
+//         ).unwrap(),
+//         db: Rc::new(db),
+//     };
+//     Ok(router(state).call(req).await?)
+// }
 
 
 pub async fn parse_event(State(state): State<Vars>, headers: HeaderMap, bytes: axum::body::Bytes) -> Response {
@@ -98,7 +109,8 @@ async fn parse_commands(state: Vars, data: Option<Data>, timestamp: u64) -> Resu
             match data.name {
                 CommandNames::FindClass => {
                     console_log!("{data:?}");
-                    return Ok(make_res(StatusCode::OK, json!({ "type": 4, "data": {"content": format!("{data:?}, {timestamp:?}, {:#?}", state.env)}})));
+                    let x = state.db.dump().await?;
+                    return Ok(make_res(StatusCode::OK, json!({ "type": 4, "data": {"content": format!("{data:?}, {timestamp:?}, {:#?}", x)}})));
                 },
             }
         },
