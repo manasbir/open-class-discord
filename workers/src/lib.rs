@@ -2,7 +2,7 @@ pub mod find_class;
 mod helpers;
 
 use anyhow::{anyhow, Result};
-use chrono::{Local, Timelike};
+use chrono::{Datelike, Local, Timelike};
 use constants::{
     commands::CommandNames,
     interaction::Interaction,
@@ -18,15 +18,8 @@ use std::{
     sync::Arc,
 };
 use worker::*;
+use crate::wasm_bindgen::JsValue;
 
-#[derive(Clone)]
-pub struct Vars {
-    public_key: ed25519_dalek::VerifyingKey,
-    db: Arc<D1Database>,
-}
-
-unsafe impl Send for Vars {}
-unsafe impl Sync for Vars {}
 
 #[event(scheduled)]
 pub async fn scheduled(event: ScheduledEvent, env: Env, _ctx: ScheduleContext) {
@@ -145,36 +138,34 @@ async fn find_class(env: Env, interaction: Interaction) -> Result<Response> {
     let building = options.get("building").map(|building| building.value.clone());
     let floor = options.get("floor").map(|floor| floor.value.clone());
     let room = options.get("room").map(|room| room.value.clone());
+    let end_time = options.get("end").map(|end_time| end_time.value.clone());
     let start_time = match options.get("start") {
         Some(time) => time.value.clone(),
         None => {
             let time = Local::now().time();
             if time.minute() < 10 {
-                format!("{}:0{}", time.hour(), time.minute())
+                format!("{}:0{}:00", time.hour(), time.minute())
             } else {
-                format!("{}:{}", time.hour(), time.minute())
+                format!("{}:{}:00", time.hour(), time.minute())
             }
         }
     };
+    let day = Local::now().weekday().to_string();
 
-    let end_time = options.get("end").map(|end_time| end_time.value.clone());
+    let (query, params) = build_query(building, day, floor, room, start_time, end_time);
+    let stmt = db.prepare(&query);
 
-    let (query, params) = build_query(building, floor, room, start_time, end_time);
-    let mut stmt = db.prepare(&query);
-
-    for param in params.iter() {
-        console_log!("{:?}", param);
-        stmt = stmt.bind(&[param.into()])?;
-    }
-
+    let params = params.into_iter().map(|param| param.into()).collect::<Vec<JsValue>>();
+    let stmt = stmt.bind(params.as_slice())?;
     console_log!("{:?}", stmt.inner());
-
+    console_log!("query: {:?}", stmt.inner().as_string());
     // Execute query
     let results = stmt.all().await?;
+    console_log!("got results");
     let res: Vec<Value> = results.results()?;
 
     make_res(
         StatusCode::OK,
-        json!({ "type": 4, "data": {"content": format!("{:?}", res[0])}}),
+        json!({ "type": 4, "data": {"content": format!("{:?}", res[0]) }}),
     )
 }

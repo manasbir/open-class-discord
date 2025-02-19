@@ -22,6 +22,7 @@ pub(crate) fn ordinal(n: i32) -> String {
 
 pub(crate) fn build_query(
     building: Option<String>,
+    day: String,
     floor: Option<String>,
     room: Option<String>,
     start_time: String,
@@ -35,6 +36,9 @@ pub(crate) fn build_query(
         params.push(building);
     }
 
+    conditions.push("AND t.day = ?");
+    params.push(day);
+
     if let Some(floor) = floor {
         conditions.push("AND f.floor_number = ?");
         params.push(floor);
@@ -45,16 +49,16 @@ pub(crate) fn build_query(
         params.push(room);
     }
 
-    conditions.push("AND t.start_time >= ? ");
-    params.push(start_time);
+    // conditions.push("AND t.start_time >= ? ");
+    // params.push(start_time);
 
-    if let Some(end_time) = end_time {
-        conditions.push("AND t.end_time >= ? ");
-        params.push(end_time);
-    }
+    // if let Some(end_time) = end_time {
+    //     conditions.push("AND t.end_time >= ? ");
+    //     params.push(end_time);
+    // }
 
     let query = format!(
-        "SELECT DISTINCT r.room_number, t.start_time, t.end_time, t.day
+        "SELECT DISTINCT r.room_id, r.floor_id, r.building_code, r.room_number, t.start_time, t.end_time, t.day
          FROM rooms r
          JOIN time_slots t ON r.room_id = t.room_id
          JOIN floors f ON r.floor_id = f.floor_id

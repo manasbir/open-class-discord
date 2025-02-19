@@ -59,7 +59,7 @@ pub async fn init_db(db: &D1Database) -> Result<()> {
 
                 // Process time slots
                 for (idx, schedule) in room_data.schedule.iter().enumerate() {
-                    let day = schedule.weekday.clone();
+                    let day = schedule.weekday.clone()[..3].to_string();
 
                     for slot in schedule.slots.clone() {
                         let start_time = slot.start_time;
@@ -150,7 +150,8 @@ fn insert_rooms_and_floors(
 
         let stmt = db.prepare(
             "INSERT INTO rooms (room_id, building_code, floor_id, room_number)
-            VALUES (?1, ?2, ?3, ?4)",
+            VALUES (?1, ?2, ?3, ?4)
+            ON CONFLICT (building_code, room_number) DO NOTHING",
         );
 
         let stmt = stmt.bind(&[
@@ -176,7 +177,7 @@ fn insert_time_slots(
             "INSERT INTO time_slots (slot_id, room_id, day, start_time, end_time)
             VALUES (?1, ?2, ?3, ?4, ?5)
             ON CONFLICT (slot_id) DO UPDATE 
-            SET start_time = excluded.start_time, end_time = excluded.end_time",
+            SET start_time = excluded.start_time, end_time = excluded.end_time, day = excluded.day",
         );
 
         let stmt = stmt.bind(&[
