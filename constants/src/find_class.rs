@@ -8,8 +8,8 @@ use serde_json::{json, Value};
 pub struct SQLRes {
     pub building_code: String,
     pub day: String,
-    pub floor_number: i32,
-    pub room_number: String,
+    pub floor_number: u32,
+    pub room_number: u32,
     pub start_time: String,
     pub end_time: String,
 
