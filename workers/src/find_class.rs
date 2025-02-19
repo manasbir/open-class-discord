@@ -180,12 +180,22 @@ fn insert_time_slots(
             SET start_time = excluded.start_time, end_time = excluded.end_time, day = excluded.day",
         );
 
+        let mut start_time = slot.start_time.clone();
+
+        start_time.pop();
+        start_time.pop();
+
+        let mut end_time = slot.end_time.clone();
+        end_time.pop();
+        end_time.pop();
+
+
         let stmt = stmt.bind(&[
             slot.to_id().into(),
             slot.room_id.as_str().into(),
             slot.day.as_str().into(),
-            slot.start_time.as_str().into(),
-            slot.end_time.as_str().into(),
+            start_time.as_str().into(),
+            end_time.as_str().into(),
         ])?;
 
         statements.push(stmt);
