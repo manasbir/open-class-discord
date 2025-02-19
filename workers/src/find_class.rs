@@ -184,8 +184,10 @@ fn insert_time_slots(
 
         start_time.pop();
         start_time.pop();
+        start_time.pop();
 
         let mut end_time = slot.end_time.clone();
+        end_time.pop();
         end_time.pop();
         end_time.pop();
 

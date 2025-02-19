@@ -61,7 +61,7 @@ pub(crate) fn build_query(
     }
 
     let query = format!(
-        "SELECT DISTINCT r.room_id, r.floor_id, r.building_code, r.room_number, t.start_time, t.end_time, t.day
+        "SELECT DISTINCT r.room_id, r.floor_id, f.floor_number, r.building_code, r.room_number, t.start_time, t.end_time, t.day
          FROM rooms r
          JOIN time_slots t ON r.room_id = t.room_id
          JOIN floors f ON r.floor_id = f.floor_id
