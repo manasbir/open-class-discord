@@ -1,21 +1,19 @@
 pub mod find_class;
 mod helpers;
-
+pub mod embed;
 use anyhow::{anyhow, Result};
 use chrono::{Datelike, Local, Timelike};
 use constants::{
-    commands::CommandNames,
-    interaction::Interaction,
+    commands::CommandNames, find_class::SQLRes, interaction::Interaction, schema::BuildingInfo
 };
 use ed25519_dalek::{Verifier, VerifyingKey};
+use embed::{make_embed, OpenBuildings, OpenFloors, OpenRooms, OpenTimes};
 use find_class::init_db;
-use helpers::{build_query, make_res};
+use helpers::{build_query, make_res, sql_res_to_open_buildings};
 use reqwest::StatusCode;
 use serde_json::{json, Value};
 use std::{
-    io::Read,
-    str::FromStr,
-    sync::Arc,
+    collections::HashSet, io::Read, str::FromStr, sync::Arc
 };
 use worker::*;
 use crate::wasm_bindgen::JsValue;
@@ -144,9 +142,9 @@ async fn find_class(env: Env, interaction: Interaction) -> Result<Response> {
         None => {
             let time = Local::now().time();
             if time.minute() < 10 {
-                format!("{}:0{}:00", time.hour(), time.minute())
+                format!("{}:0{}", time.hour(), time.minute())
             } else {
-                format!("{}:{}:00", time.hour(), time.minute())
+                format!("{}:{}", time.hour(), time.minute())
             }
         }
     };
@@ -162,10 +160,15 @@ async fn find_class(env: Env, interaction: Interaction) -> Result<Response> {
     // Execute query
     let results = stmt.all().await?;
     console_log!("got results");
-    let res: Vec<Value> = results.results()?;
+
+
+    let res = results.results::<SQLRes>()?;
+
+    let open_buildings = sql_res_to_open_buildings(res);
+
 
     make_res(
         StatusCode::OK,
-        json!({ "type": 4, "data": {"content": format!("{:?}", res[0]) }}),
+        make_embed(open_buildings),
     )
 }
