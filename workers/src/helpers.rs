@@ -67,7 +67,7 @@ pub(crate) fn build_query(
          JOIN floors f ON r.floor_id = f.floor_id
          JOIN buildings b ON b.building_code = r.building_code
          WHERE 1=1 {}
-         ORDER BY t.end_time DESC, t.start_time DESC",
+         ORDER BY t.start_time ASC, t.end_time DESC",
         conditions.join(" ")
     );
 
