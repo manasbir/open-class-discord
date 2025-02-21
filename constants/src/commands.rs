@@ -36,21 +36,21 @@ pub const COMMANDS: [Command; 2] = [
             },
             CommandOptions {
                 r#type: 3,
-                name: "floor number",
+                name: "floor",
                 autocomplete: false,
                 description: "floor num",
             },
             CommandOptions {
                 r#type: 3,
-                name: "room number",
+                name: "room",
                 autocomplete: false,
                 description: "room num",
             },
             CommandOptions {
                 r#type: 3,
-                name: "time",
+                name: "start_time",
                 autocomplete: false,
-                description: "time",
+                description: "start time",
             },
             
         ]),
