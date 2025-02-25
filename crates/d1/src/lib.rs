@@ -37,7 +37,7 @@ pub async fn get_open_classes(db: D1Database, params: Params) -> Result<Vec<SQLR
     add_param(
         &mut query_string,
         &mut param_vec,
-        Some(params.start_time),
+        Some(params.start_time.clone()),
         "AND t.start_time <= ?",
     );
     add_param(
@@ -62,6 +62,12 @@ pub async fn get_open_classes(db: D1Database, params: Params) -> Result<Vec<SQLR
         &mut query_string,
         &mut param_vec,
         params.end_time,
+        "AND t.end_time >= ?",
+    );
+    add_param(
+        &mut query_string,
+        &mut param_vec,
+        Some(params.start_time),
         "AND t.end_time >= ?",
     );
 
