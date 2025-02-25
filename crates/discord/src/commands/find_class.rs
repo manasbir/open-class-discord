@@ -21,7 +21,7 @@ pub async fn find_class(db: D1Database, interaction: Interaction) -> Result<Resp
 
     let building = options
         .get("building")
-        .map(|building| building.value.clone());
+        .map(|building| building.value.clone().to_ascii_uppercase());
     let floor = options.get("floor").map(|floor| floor.value.clone());
     let room = options.get("room").map(|room| room.value.clone());
     let end_time = match options.get("end_time") {
