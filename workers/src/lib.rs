@@ -1,4 +1,5 @@
 use anyhow::{anyhow, Result};
+use ::d1::refresh::refresh_db;
 use discord::{make_res, parse_event};
 use reqwest::StatusCode;
 use serde_json::{json, Value};
@@ -9,6 +10,7 @@ use worker::*;
 pub async fn scheduled(event: ScheduledEvent, env: Env, _ctx: ScheduleContext) {
     console_error_panic_hook::set_once();
     console_log!("scheduled event");
+    refresh_db(&env.d1("DB").unwrap()).await.unwrap();
 }
 
 #[event(fetch)]
