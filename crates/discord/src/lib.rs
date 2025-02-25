@@ -1,19 +1,16 @@
+use reqwest::StatusCode;
+use serde_json::Value;
+use worker::Response;
+use anyhow::Result;
+
 pub mod commands;
 pub mod types;
 pub mod embed;
-pub mod parse_interaction;
+pub mod interactions;
 
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
+pub fn make_res(code: StatusCode, body: Value) -> Result<Response> {
+    Ok(Response::builder()
+        .with_status(code.as_u16())
+        .with_header("content-type", "application/json;charset=UTF-8")?
+        .from_json(&body)?)
 }

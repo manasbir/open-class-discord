@@ -4,16 +4,6 @@ use serde::{Deserialize, Deserializer};
 use serde_json::{json, Value};
 
 
-#[derive(Debug, Deserialize, Clone)]
-pub struct SQLRes {
-    pub building_code: String,
-    pub floor_number: u32,
-    pub room_number: u32,
-    pub start_time: String,
-    pub end_time: String,
-
-}
-
 #[derive(Debug, Deserialize)]
 pub struct FindClassRes {
     pub data: FindClassResData,

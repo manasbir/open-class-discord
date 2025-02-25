@@ -3,12 +3,12 @@ use anyhow::{anyhow, Result};
 use chrono::{Datelike, Local, Timelike};
 use ::d1::init::init_db;
 use ::d1::query::build_query;
-use discord::commands::CommandNames;
-use discord::parse_interaction::Interaction;
+use discord::commands::{find_class::find_class, CommandNames};
+use discord::interactions::Interaction;
+use discord::make_res;
 use ed25519_dalek::{Verifier, VerifyingKey};
-use portal::types::SQLRes;
+use ::d1::SQLRes;
 use discord::embed::{make_embed, OpenBuildings, OpenFloors, OpenRooms, OpenTimes};
-use helpers::{make_res, sql_res_to_open_buildings};
 use reqwest::StatusCode;
 use serde_json::{json, Value};
 use std::{
@@ -84,7 +84,7 @@ async fn parse_commands(env: Env, interaction: Interaction) -> Result<Response> 
     match &interaction.data {
         Some(data) => match data.name {
             CommandNames::Init => init_command(env, &interaction).await,
-            CommandNames::FindClass => find_class(env, interaction).await,
+            CommandNames::FindClass => find_class(env.d1("DB")?, interaction).await,
         },
         None => make_res(
             StatusCode::OK,
@@ -121,6 +121,8 @@ async fn init_command(env: Env, interaction: &Interaction) -> Result<Response> {
         );
     }
 
+    JsValue::null();
+
     init_db(&env.d1("DB")?).await?;
 
     make_res(
@@ -129,50 +131,4 @@ async fn init_command(env: Env, interaction: &Interaction) -> Result<Response> {
     )
 }
 
-async fn find_class(env: Env, interaction: Interaction) -> Result<Response> {
-    let db = env.d1("DB")?;
 
-    let options = interaction.data.unwrap().options;
-
-    let building = options.get("building").map(|building| building.value.clone());
-    let floor = options.get("floor").map(|floor| floor.value.clone());
-    let room = options.get("room").map(|room| room.value.clone());
-    let end_time = options.get("end_time").map(|end_time| end_time.value.clone());
-    let start_time = match options.get("start_time") {
-        Some(time) => time.value.clone(),
-        None => {
-            let time = Local::now().time();
-            if time.minute() < 10 {
-                format!("{}:0{}", time.hour(), time.minute())
-            } else {
-                format!("{}:{}", time.hour(), time.minute())
-            }
-        }
-    };
-    let day = Local::now().weekday().to_string();
-
-
-    let (query, params) = build_query(building, day, floor, room, start_time, end_time);
-
-    let stmt = db.prepare(&query);
-    let params = params.into_iter().map(|param| param.into()).collect::<Vec<JsValue>>();
-    let stmt = stmt.bind(params.as_slice())?;
-    console_log!("{:?}", stmt.inner());
-
-    // Execute query
-    let results = stmt.all().await?;
-    console_log!("got results");
-
-
-    let res = results.results::<SQLRes>()?;
-    console_log!("{:#?}", res);
-
-    // let open_buildings = sql_res_to_open_buildings(
-    let res = res.iter().take(5).collect::<Vec<_>>();
-
-
-    make_res(
-        StatusCode::OK,
-        json!({ "type": 4, "data": {"content": format!("```{:?}```", res)}}),
-    )
-}
