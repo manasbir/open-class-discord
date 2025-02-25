@@ -81,7 +81,7 @@ pub async fn find_class(db: D1Database, interaction: Interaction) -> Result<Resp
 
     let res = get_open_classes(db, params).await?;
 
-    let res = res.iter().take(5).collect::<Vec<_>>();
+    let res = res.iter().take(6).collect::<Vec<_>>();
 
     if res.len() == 0 {
         return make_res(StatusCode::OK, json!({ "type": 4, "data": { "content": "No classes found :/" }}));
@@ -127,7 +127,7 @@ fn build_embed(res: Vec<&SQLRes>) -> Embed {
                 start_time.format("%-I:%M %p"),
                 end_time.format("%-I:%M %p")
             ),
-            inline: false,
+            inline: true,
         });
     }
 
