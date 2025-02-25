@@ -14,6 +14,7 @@ use d1::{get_open_classes, Params, SQLRes};
 use reqwest::StatusCode;
 use serde_json::json;
 use worker::{D1Database, Response};
+use chrono_tz::America::Toronto;
 
 pub async fn find_class(db: D1Database, interaction: Interaction) -> Result<Response> {
     let options = interaction.data.unwrap().options;
@@ -59,7 +60,7 @@ pub async fn find_class(db: D1Database, interaction: Interaction) -> Result<Resp
             }
         }
         None => {
-            let time = Local::now().time();
+            let time = Local::now().with_timezone(&Toronto).time();
             if time.minute() < 10 {
                 format!("{}:0{}", time.hour(), time.minute())
             } else {
@@ -67,7 +68,7 @@ pub async fn find_class(db: D1Database, interaction: Interaction) -> Result<Resp
             }
         }
     };
-    let day = Local::now().weekday().to_string();
+    let day = Local::now().with_timezone(&Toronto).weekday().to_string();
 
     let params = Params {
         start_time,
