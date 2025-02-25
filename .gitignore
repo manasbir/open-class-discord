@@ -2,7 +2,5 @@
 .dev.vars
 
 # Added by cargo
-
 /target
-wrangler.toml
 Cargo.lock

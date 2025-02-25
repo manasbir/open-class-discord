@@ -1,0 +1,14 @@
+name = "workers"
+main = "build/worker/shim.mjs"
+compatibility_date = "2025-02-07"
+
+[build]
+command = "cargo install -q worker-build && worker-build --release"
+
+[triggers]
+crons = [ "0 5 * * *" ]
+
+[[ d1_databases ]]
+binding = "DB" # i.e. available in your Worker on env.DB
+database_name = "test1"
+database_id = "60cbf05d-acbf-4d6f-af76-bfa31b18a6da"
