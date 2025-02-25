@@ -24,8 +24,8 @@ pub async fn find_class(db: D1Database, interaction: Interaction) -> Result<Resp
         Some(building) => building.value.clone().to_ascii_uppercase(),
         None => "MC".to_string(),
     };
-    let floor = options.get("floor").map(|floor| floor.value.clone());
-    let room = options.get("room").map(|room| room.value.clone());
+    let floor_number = options.get("floor").map(|floor| floor.value.clone());
+    let room_number = options.get("room").map(|room| room.value.clone());
     let end_time = match options.get("end_time") {
         Some(end_time) => match NaiveTime::from_str(&end_time.value) {
             Ok(end_time) => {
@@ -74,8 +74,8 @@ pub async fn find_class(db: D1Database, interaction: Interaction) -> Result<Resp
         start_time,
         day,
         building_code: Some(building),
-        floor_number: floor,
-        room_number: room,
+        floor_number,
+        room_number,
         end_time,
     };
 
@@ -83,6 +83,9 @@ pub async fn find_class(db: D1Database, interaction: Interaction) -> Result<Resp
 
     let res = res.iter().take(5).collect::<Vec<_>>();
 
+    if res.len() == 0 {
+        return make_res(StatusCode::OK, json!({ "type": 4, "data": { "content": "No classes found :/" }}));
+    }
     make_res(
         StatusCode::OK,
         json!({ "type": 4, "data": { "message": msg, "embeds": [build_embed(res)]}}),
