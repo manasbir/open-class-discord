@@ -21,7 +21,7 @@ pub fn make_res(code: StatusCode, body: Value) -> Result<Response> {
 
 pub async fn parse_event(req: &mut Request, env: Env) -> Result<Response> {
     let key = VerifyingKey::from_bytes(
-        &hex::decode(env.var("DISCORD_PUBLIC_KEY")?.to_string())
+        &hex::decode(env.secret("DISCORD_PUBLIC_KEY")?.to_string())
             .unwrap()
             .try_into()
             .unwrap(),

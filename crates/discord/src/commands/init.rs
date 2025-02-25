@@ -12,7 +12,7 @@ pub async fn init_command(env: Env, interaction: &Interaction) -> Result<Respons
         .user
         .as_ref()
         .ok_or_else(|| anyhow!("No member???"))?;
-    if member.id != env.var("ADMIN_DISCORD_ID")?.to_string() {
+    if member.id != env.secret("ADMIN_DISCORD_ID")?.to_string() {
         return make_res(
             StatusCode::OK,
             json!({ "type": 4, "data": {"content": "unauthorized"}}),
