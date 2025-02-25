@@ -1,10 +1,9 @@
-use std::{collections::HashMap, str};
-use serde::Deserialize;
 use super::commands::CommandNames;
-
+use serde::Deserialize;
+use std::{collections::HashMap, str};
 
 #[derive(Deserialize)]
- pub struct Interaction {
+pub struct Interaction {
     // TODO make `type`` enum
     pub r#type: i32,
     pub data: Option<Data>,
@@ -12,9 +11,8 @@ use super::commands::CommandNames;
     pub user: Option<User>,
 }
 
-
 #[derive(Deserialize, Debug)]
-pub struct User{
+pub struct User {
     pub id: String,
 }
 
@@ -27,7 +25,7 @@ pub struct Data {
     pub r#type: i32,
 }
 
-impl <'de> serde::Deserialize<'de> for Data {
+impl<'de> serde::Deserialize<'de> for Data {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         // First deserialize into a temporary struct to handle the nested JSON string
         #[derive(Deserialize)]
@@ -47,7 +45,12 @@ impl <'de> serde::Deserialize<'de> for Data {
             }
         }
 
-        Ok(Data { id: outer.id, name: outer.name, options: options, r#type: outer.r#type })
+        Ok(Data {
+            id: outer.id,
+            name: outer.name,
+            options: options,
+            r#type: outer.r#type,
+        })
     }
 }
 

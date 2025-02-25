@@ -19,10 +19,10 @@ pub struct CommandOptions {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-#[serde(rename_all="snake_case")]
+#[serde(rename_all = "snake_case")]
 pub enum CommandNames {
     FindClass,
-    Init
+    Init,
 }
 
 pub const COMMANDS: [Command; 2] = [
@@ -54,7 +54,6 @@ pub const COMMANDS: [Command; 2] = [
                 autocomplete: false,
                 description: "start time",
             },
-            
         ]),
     },
     Command {

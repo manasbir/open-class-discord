@@ -1,9 +1,7 @@
 use anyhow::Result;
+use discord::commands::COMMANDS;
 use reqwest::Client;
 use serde_json::{json, Value};
-use discord::commands::COMMANDS;
-
-
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -19,16 +17,18 @@ async fn main() -> Result<()> {
 
     let mut commands = json!(COMMANDS);
     for command in commands.as_array_mut().unwrap() {
-        command["integration_types"] = json!([0,1]);
+        command["integration_types"] = json!([0, 1]);
         command["dm_permission"] = json!(true);
-        command["contexts"] = json!([0,1,2]);
+        command["contexts"] = json!([0, 1, 2]);
     }
 
     let res = client
         .put(url)
         .header("Content-Type", "application/json")
         .header("Authorization", format!("Bot {}", discord_token))
-        .body(json!(commands).to_string()).send().await?;
+        .body(json!(commands).to_string())
+        .send()
+        .await?;
 
     match res.status().as_u16() {
         200..=299 => {

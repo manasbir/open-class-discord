@@ -3,7 +3,6 @@ pub const FIND_CLASS_URL: &str = "https://portalapi2.uwaterloo.ca/v2/map/OpenCla
 use serde::{Deserialize, Deserializer};
 use serde_json::{json, Value};
 
-
 #[derive(Debug, Deserialize)]
 pub struct FindClassRes {
     pub data: FindClassResData,
@@ -22,27 +21,25 @@ pub struct Property {
     pub open_classroom_slots: Option<OpenClassroomSlots>,
 }
 
-
 impl<'de> serde::Deserialize<'de> for FindClassResData {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         // First deserialize into a temporary struct to handle the nested JSON string
         #[derive(Deserialize)]
         struct Outer {
             features: Vec<Feature>,
-        } 
+        }
 
         #[derive(Deserialize)]
         struct Feature {
             properties: Properties,
         }
 
-
         #[derive(Deserialize)]
         struct Properties {
             building_name: String,
             building_code: String,
             #[serde(rename = "openClassroomSlots")]
-            open_classroom_slots: Option<String>,  // The data field contains a JSON string
+            open_classroom_slots: Option<String>, // The data field contains a JSON string
         }
 
         let outer = Outer::deserialize(deserializer)?.features;
@@ -50,18 +47,27 @@ impl<'de> serde::Deserialize<'de> for FindClassResData {
         let mut vec = Vec::new();
 
         for feature in outer {
-            vec.push( match feature.properties.open_classroom_slots {
-                None => Property { building_name: feature.properties.building_name, building_code: feature.properties.building_code, open_classroom_slots: None },
+            vec.push(match feature.properties.open_classroom_slots {
+                None => Property {
+                    building_name: feature.properties.building_name,
+                    building_code: feature.properties.building_code,
+                    open_classroom_slots: None,
+                },
                 Some(open_classroom_slots) => {
                     // Parse the inner JSONstring
                     let inner_value: Value = serde_json::from_str(&open_classroom_slots)
                         .map_err(serde::de::Error::custom)?;
 
-                    let data = Some(OpenClassroomSlots::deserialize(inner_value)
-                        .map_err(serde::de::Error::custom)?);
+                    let data = Some(
+                        OpenClassroomSlots::deserialize(inner_value)
+                            .map_err(serde::de::Error::custom)?,
+                    );
 
-
-                    Property { building_name: feature.properties.building_name, building_code: feature.properties.building_code, open_classroom_slots: data}
+                    Property {
+                        building_name: feature.properties.building_name,
+                        building_code: feature.properties.building_code,
+                        open_classroom_slots: data,
+                    }
                 }
             })
         }
@@ -69,13 +75,10 @@ impl<'de> serde::Deserialize<'de> for FindClassResData {
     }
 }
 
-
 #[derive(Debug, Deserialize)]
 pub struct OpenClassroomSlots {
     pub data: Vec<OpenClassroomData>,
 }
-
-
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct OpenClassroomData {

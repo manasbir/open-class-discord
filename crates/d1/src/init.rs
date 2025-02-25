@@ -1,9 +1,11 @@
 use anyhow::{Context, Result};
 use portal::get_classes;
-use std::{collections::HashSet, ops::Deref};
 use worker::{console_log, D1Database, D1PreparedStatement};
 
-use crate::{insert::{insert_buildings, insert_rooms_and_floors, insert_time_slots}, types::{BuildingInfo, FloorInfo, RoomInfo, TimeSlots, ToID}};
+use crate::{
+    insert::{insert_buildings, insert_rooms_and_floors, insert_time_slots},
+    types::{BuildingInfo, FloorInfo, RoomInfo, TimeSlots, ToID},
+};
 
 pub async fn init_db(db: &D1Database) -> Result<()> {
     let features = get_classes().await?;
@@ -14,7 +16,6 @@ pub async fn init_db(db: &D1Database) -> Result<()> {
     let mut time_slots = Vec::new();
 
     for props in features {
-
         // Process building
         let building = BuildingInfo {
             building_code: props.building_code,
@@ -78,4 +79,3 @@ pub async fn init_db(db: &D1Database) -> Result<()> {
 
     Ok(())
 }
-

@@ -1,14 +1,17 @@
+use crate::{interactions::Interaction, make_res};
+use anyhow::{anyhow, Result};
 use d1::init::init_db;
 use reqwest::StatusCode;
 use serde_json::json;
 use worker::{Env, Response};
-use anyhow::{anyhow, Result};
-use crate::{interactions::Interaction, make_res};
 
 // TODO: kill init command for a more secure way to initialize the database
 
 pub async fn init_command(env: Env, interaction: &Interaction) -> Result<Response> {
-    let member = interaction.user.as_ref().ok_or_else(|| anyhow!("No member???"))?;
+    let member = interaction
+        .user
+        .as_ref()
+        .ok_or_else(|| anyhow!("No member???"))?;
     if member.id != env.var("ADMIN_DISCORD_ID")?.to_string() {
         return make_res(
             StatusCode::OK,

@@ -1,8 +1,8 @@
 use std::{collections::HashSet, ops::Deref};
 
-use worker::{console_log, D1Database, D1PreparedStatement};
-use anyhow::Result;
 use crate::types::{BuildingInfo, RoomInfo, TimeSlots, ToID};
+use anyhow::Result;
+use worker::{console_log, D1Database, D1PreparedStatement};
 
 pub(crate) fn insert_buildings(
     db: &D1Database,

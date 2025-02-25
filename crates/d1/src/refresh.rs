@@ -2,7 +2,10 @@ use anyhow::Result;
 use portal::get_classes;
 use worker::D1Database;
 
-use crate::{insert::insert_time_slots, types::{BuildingInfo, FloorInfo, RoomInfo, TimeSlots, ToID}};
+use crate::{
+    insert::insert_time_slots,
+    types::{BuildingInfo, FloorInfo, RoomInfo, TimeSlots, ToID},
+};
 
 pub async fn refresh_db(db: &D1Database) -> Result<()> {
     let properties = get_classes().await?;
@@ -10,14 +13,13 @@ pub async fn refresh_db(db: &D1Database) -> Result<()> {
     let mut statements = Vec::new();
     let mut time_slots = Vec::new();
 
-
     for props in properties {
-
         // Process building
         let building_id = BuildingInfo {
             building_code: props.building_code,
             primary_name: props.building_name,
-        }.to_id();
+        }
+        .to_id();
 
         // Process rooms and floors
         if let Some(slots) = props.open_classroom_slots {
@@ -40,7 +42,8 @@ pub async fn refresh_db(db: &D1Database) -> Result<()> {
                     building_code: building_id.clone(),
                     floor_id,
                     room_number: room_data.room_number,
-                }.to_id();
+                }
+                .to_id();
 
                 // Process time slots
                 for (idx, schedule) in room_data.schedule.iter().enumerate() {

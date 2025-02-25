@@ -1,7 +1,5 @@
 use super::types::*;
 
-
-
 #[derive(Debug, Default)]
 pub struct EmbedBuilder {
     fields: Option<Vec<EmbedField>>,

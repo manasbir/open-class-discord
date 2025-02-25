@@ -1,4 +1,4 @@
-use anyhow::{Result, Context};
+use anyhow::{Context, Result};
 use types::{FindClassRes, Property, FIND_CLASS_URL};
 
 pub mod types;
@@ -10,7 +10,8 @@ pub async fn get_classes() -> Result<Vec<Property>> {
         .json::<FindClassRes>()
         .await
         .context("Failed to parse JSON")?
-        .data.properties)
+        .data
+        .properties)
 }
 
 #[cfg(test)]
@@ -18,6 +19,5 @@ mod tests {
     use super::*;
 
     #[test]
-    fn it_works() {
-    }
+    fn it_works() {}
 }

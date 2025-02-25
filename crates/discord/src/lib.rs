@@ -1,12 +1,12 @@
 use std::str::FromStr;
 
+use anyhow::{anyhow, Result};
 use commands::{find_class::find_class, init::init_command, CommandNames};
-use ed25519_dalek::{Verifier ,VerifyingKey};
+use ed25519_dalek::{Verifier, VerifyingKey};
 use interactions::Interaction;
 use reqwest::StatusCode;
 use serde_json::{json, Value};
 use worker::{Env, Headers, Request, Response};
-use anyhow::{Result, anyhow};
 
 pub mod commands;
 mod embed;
@@ -90,4 +90,3 @@ fn verify_sig(public_key: VerifyingKey, headers: &Headers, bytes: Vec<u8>) -> Re
     let signature = ed25519_dalek::Signature::from_str(&hex::encode(&signature_bytes))?;
     Ok(public_key.verify(&verify_data, &signature)?)
 }
-
