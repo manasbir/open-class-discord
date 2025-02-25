@@ -4,10 +4,9 @@ use serde::{Deserialize, Deserializer};
 use serde_json::{json, Value};
 
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct SQLRes {
     pub building_code: String,
-    pub day: String,
     pub floor_number: u32,
     pub room_number: u32,
     pub start_time: String,

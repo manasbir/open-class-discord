@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-constants = { path = "../constants" }
+discord = { path = "../../crates/discord" }
 anyhow = "1.0.95"
 reqwest = { version = "0.12.12", features = ["json"] }
 serde_json = "1.0.138"

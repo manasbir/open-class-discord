@@ -1,10 +1,8 @@
 use anyhow::{Context, Result};
-use constants::{
-    find_class::{FindClassRes, FIND_CLASS_URL},
-    schema::{BuildingInfo, FloorInfo, RoomInfo, TimeSlots, ToID},
-};
 use std::{collections::HashSet, ops::Deref};
 use worker::{console_log, D1Database, D1PreparedStatement};
+
+use crate::types::{BuildingInfo, FloorInfo, RoomInfo, TimeSlots, ToID};
 
 pub async fn init_db(db: &D1Database) -> Result<()> {
     console_log!("Initializing database");
@@ -187,10 +185,10 @@ fn insert_time_slots(
         start_time.pop();
 
         let mut end_time = slot.end_time.clone();
-        end_time.pop();
-        end_time.pop();
-        end_time.pop();
 
+        end_time.pop();
+        end_time.pop();
+        end_time.pop();
 
         let stmt = stmt.bind(&[
             slot.to_id().into(),

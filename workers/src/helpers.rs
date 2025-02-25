@@ -1,10 +1,10 @@
 use anyhow::Result;
-use constants::find_class::SQLRes;
 use reqwest::StatusCode;
 use serde_json::Value;
 use worker::Response;
 
-use crate::embed::{OpenBuildings, OpenFloors, OpenRooms, OpenTimes};
+use discord::embed::{OpenBuildings, OpenFloors, OpenRooms, OpenTimes};
+use portal::types::SQLRes;
 
 pub(crate) fn make_res(code: StatusCode, body: Value) -> Result<Response> {
     Ok(Response::builder()
@@ -34,13 +34,16 @@ pub(crate) fn build_query(
     let mut conditions = Vec::new();
     let mut params = Vec::new();
 
+    conditions.push("AND t.day = ?");
+    params.push(day);
+
+    conditions.push("AND t.start_time >= ? ");
+    params.push(start_time);
+
     if let Some(building) = building {
         conditions.push("AND b.building_code = ?");
         params.push(building);
     }
-
-    conditions.push("AND t.day = ?");
-    params.push(day);
 
     if let Some(floor) = floor {
         conditions.push("AND f.floor_number = ?");
@@ -52,8 +55,6 @@ pub(crate) fn build_query(
         params.push(room);
     }
 
-    conditions.push("AND t.start_time >= ? ");
-    params.push(start_time);
 
     if let Some(end_time) = end_time {
         conditions.push("AND t.end_time >= ? ");
@@ -67,7 +68,7 @@ pub(crate) fn build_query(
          JOIN floors f ON r.floor_id = f.floor_id
          JOIN buildings b ON b.building_code = r.building_code
          WHERE 1=1 {}
-         ORDER BY t.start_time ASC, t.end_time DESC",
+         ORDER BY t.end_time DESC, t.start_time ASC,",
         conditions.join(" ")
     );
 

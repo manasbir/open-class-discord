@@ -1,0 +1,13 @@
+[package]
+name = "discord"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+serde = "1.0.217"
+hex = "0.4.3"
+anyhow = "1.0.95"
+reqwest = { version = "0.12.12", features = ["json"] }
+chrono = "0.4.39"
+worker = { version="0.5.0", features=['http', 'd1'] }
+serde_json = "1.0.138"

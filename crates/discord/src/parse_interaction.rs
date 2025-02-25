@@ -1,7 +1,8 @@
 use std::{collections::{HashMap, HashSet}, str};
 use serde::Deserialize;
+use super::commands::CommandNames;
 
-use crate::commands::CommandNames;
+
 
 #[derive(Deserialize)]
  pub struct Interaction {
@@ -9,13 +10,13 @@ use crate::commands::CommandNames;
     pub r#type: i32,
     pub data: Option<Data>,
     pub timestamp: Option<String>,
-    pub member: Member,
+    pub user: Option<User>,
 }
 
 
 #[derive(Deserialize, Debug)]
-pub struct Member{
-    pub user: User,
+pub struct User{
+    pub id: String,
 }
 
 #[derive(Debug)]
@@ -51,10 +52,10 @@ impl <'de> serde::Deserialize<'de> for Data {
     }
 }
 
-#[derive(Deserialize, Debug)]
-pub struct User {
-    pub id: String,
-}
+// #[derive(Deserialize, Debug)]
+// pub struct User {
+//     pub id: String,
+// }
 
 #[derive(Deserialize, Debug, Eq, PartialEq, Hash)]
 pub struct Options {
