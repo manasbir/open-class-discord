@@ -1,10 +1,8 @@
-pub mod query;
 pub mod types;
 pub mod init;
 use anyhow::Result;
 use serde::{Deserialize, Deserializer};
-use serde_json::{json, Value};
-use worker::D1Database;
+use worker::{console_log, D1Database};
 
 
 #[derive(Debug, Deserialize, Clone)]
@@ -28,6 +26,7 @@ pub struct Params {
 pub async fn get_open_classes(db: D1Database, params: Params) -> Result<Vec<SQLRes>> {
     let mut query_string = Vec::new();
     let mut param_vec = Vec::new();
+
     add_param(&mut query_string, &mut param_vec, Some(params.day), "AND t.day = ?");
     add_param(&mut query_string, &mut param_vec, Some(params.start_time), "AND t.start_time >= ?");
     add_param(&mut query_string, &mut param_vec, params.building_code, "AND b.building_code = ?");
@@ -36,13 +35,14 @@ pub async fn get_open_classes(db: D1Database, params: Params) -> Result<Vec<SQLR
     add_param(&mut query_string, &mut param_vec, params.end_time, "AND t.end_time >= ?");
 
     let query = format!(
-        "SELECT DISTINCT r.room_id, r.floor_id, f.floor_number, r.building_code, r.room_number, t.start_time, t.end_time, t.day
+        "SELECT DISTINCT r.room_id, r.floor_id, f.floor_number, r.building_code, r.room_number, 
+        t.start_time, t.end_time, t.day
          FROM rooms r
          JOIN time_slots t ON r.room_id = t.room_id
          JOIN floors f ON r.floor_id = f.floor_id
          JOIN buildings b ON b.building_code = r.building_code
          WHERE 1=1 {}
-         ORDER BY t.end_time DESC, t.start_time ASC,",
+         ORDER BY t.start_time ASC, t.end_time DESC",
         query_string.join(" ")
     );
 

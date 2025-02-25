@@ -1,7 +1,6 @@
-use std::{collections::{HashMap, HashSet}, str};
+use std::{collections::HashMap, str};
 use serde::Deserialize;
 use super::commands::CommandNames;
-
 
 
 #[derive(Deserialize)]
@@ -51,11 +50,6 @@ impl <'de> serde::Deserialize<'de> for Data {
         Ok(Data { id: outer.id, name: outer.name, options: options, r#type: outer.r#type })
     }
 }
-
-// #[derive(Deserialize, Debug)]
-// pub struct User {
-//     pub id: String,
-// }
 
 #[derive(Deserialize, Debug, Eq, PartialEq, Hash)]
 pub struct Options {

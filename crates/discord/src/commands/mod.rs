@@ -1,5 +1,5 @@
 pub mod find_class;
-
+pub mod init;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize)]

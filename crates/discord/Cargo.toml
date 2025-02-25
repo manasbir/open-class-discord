@@ -12,3 +12,4 @@ reqwest = { version = "0.12.12", features = ["json"] }
 chrono = "0.4.39"
 worker = { version="0.5.0", features=['http', 'd1'] }
 serde_json = "1.0.138"
+ed25519-dalek = "2.1.1"
