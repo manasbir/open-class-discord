@@ -43,6 +43,18 @@ pub async fn get_open_classes(db: D1Database, params: Params) -> Result<Vec<SQLR
     add_param(
         &mut query_string,
         &mut param_vec,
+        Some(params.start_time),
+        "AND t.end_time >= ?",
+    );
+    add_param(
+        &mut query_string,
+        &mut param_vec,
+        params.end_time,
+        "AND t.end_time >= ?",
+    );
+    add_param(
+        &mut query_string,
+        &mut param_vec,
         params.building_code,
         "AND b.building_code = ?",
     );
@@ -58,18 +70,7 @@ pub async fn get_open_classes(db: D1Database, params: Params) -> Result<Vec<SQLR
         params.room_number,
         "AND r.room_number = ?",
     );
-    add_param(
-        &mut query_string,
-        &mut param_vec,
-        params.end_time,
-        "AND t.end_time >= ?",
-    );
-    add_param(
-        &mut query_string,
-        &mut param_vec,
-        Some(params.start_time),
-        "AND t.end_time >= ?",
-    );
+
 
     let query = format!(
         "SELECT DISTINCT r.room_id, r.floor_id, f.floor_number, r.building_code, r.room_number, 
