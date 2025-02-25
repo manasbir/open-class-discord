@@ -22,7 +22,7 @@ pub async fn find_class(db: D1Database, interaction: Interaction) -> Result<Resp
     let building = match options.get("building") {
         Some(building) => building.value.clone().to_ascii_uppercase(),
         None => "MC".to_string(),
-    }
+    };
     let floor = options.get("floor").map(|floor| floor.value.clone());
     let room = options.get("room").map(|room| room.value.clone());
     let end_time = match options.get("end_time") {
@@ -72,7 +72,7 @@ pub async fn find_class(db: D1Database, interaction: Interaction) -> Result<Resp
     let params = Params {
         start_time,
         day,
-        building_code: building,
+        building_code: Some(building),
         floor_number: floor,
         room_number: room,
         end_time,
