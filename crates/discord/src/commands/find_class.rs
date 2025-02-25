@@ -12,8 +12,8 @@ use anyhow::Result;
 use chrono::{Datelike, Local, NaiveTime, Timelike};
 use d1::{get_open_classes, Params, SQLRes};
 use reqwest::StatusCode;
-use serde_json::{json, Value};
-use worker::{console_log, D1Database, Response};
+use serde_json::json;
+use worker::{D1Database, Response};
 
 pub async fn find_class(db: D1Database, interaction: Interaction) -> Result<Response> {
     let options = interaction.data.unwrap().options;

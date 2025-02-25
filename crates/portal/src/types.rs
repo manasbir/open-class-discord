@@ -1,7 +1,7 @@
 pub const FIND_CLASS_URL: &str = "https://portalapi2.uwaterloo.ca/v2/map/OpenClassrooms";
 
-use serde::{Deserialize, Deserializer};
-use serde_json::{json, Value};
+use serde::Deserialize;
+use serde_json::Value;
 
 #[derive(Debug, Deserialize)]
 pub struct FindClassRes {

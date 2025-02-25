@@ -3,8 +3,8 @@ pub mod insert;
 pub mod refresh;
 pub mod types;
 use anyhow::Result;
-use serde::{Deserialize, Deserializer};
-use worker::{console_log, D1Database};
+use serde::Deserialize;
+use worker::D1Database;
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct SQLRes {

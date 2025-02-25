@@ -48,7 +48,7 @@ impl<'de> serde::Deserialize<'de> for Data {
         Ok(Data {
             id: outer.id,
             name: outer.name,
-            options: options,
+            options,
             r#type: outer.r#type,
         })
     }

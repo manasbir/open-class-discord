@@ -13,11 +13,3 @@ pub async fn get_classes() -> Result<Vec<Property>> {
         .data
         .properties)
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn it_works() {}
-}

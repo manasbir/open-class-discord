@@ -1,6 +1,6 @@
-use anyhow::{Context, Result};
+use anyhow::Result;
 use portal::get_classes;
-use worker::{console_log, D1Database, D1PreparedStatement};
+use worker::{console_log, D1Database};
 
 use crate::{
     insert::{insert_buildings, insert_rooms_and_floors, insert_time_slots},
