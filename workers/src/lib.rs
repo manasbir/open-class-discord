@@ -1,13 +1,14 @@
 mod helpers;
 use anyhow::{anyhow, Result};
 use chrono::{Datelike, Local, Timelike};
-use d1::init::init_db;
+use ::d1::init::init_db;
+use ::d1::query::build_query;
 use discord::commands::CommandNames;
 use discord::parse_interaction::Interaction;
 use ed25519_dalek::{Verifier, VerifyingKey};
 use portal::types::SQLRes;
 use discord::embed::{make_embed, OpenBuildings, OpenFloors, OpenRooms, OpenTimes};
-use helpers::{build_query, make_res, sql_res_to_open_buildings};
+use helpers::{make_res, sql_res_to_open_buildings};
 use reqwest::StatusCode;
 use serde_json::{json, Value};
 use std::{

@@ -1,7 +1,16 @@
+use anyhow::{Result, Context};
+use types::{FindClassRes, Property, FIND_CLASS_URL};
+
 pub mod types;
 
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
+pub async fn get_classes() -> Result<Vec<Property>> {
+    Ok(reqwest::get(FIND_CLASS_URL)
+        .await
+        .context("Failed to fetch data")?
+        .json::<FindClassRes>()
+        .await
+        .context("Failed to parse JSON")?
+        .data.properties)
 }
 
 #[cfg(test)]
@@ -10,7 +19,5 @@ mod tests {
 
     #[test]
     fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
     }
 }

@@ -1,4 +1,5 @@
 use anyhow::{Context, Result};
+use portal::get_classes;
 use std::{collections::HashSet, ops::Deref};
 use worker::{console_log, D1Database, D1PreparedStatement};
 
@@ -7,15 +8,8 @@ use crate::types::{BuildingInfo, FloorInfo, RoomInfo, TimeSlots, ToID};
 pub async fn init_db(db: &D1Database) -> Result<()> {
     console_log!("Initializing database");
 
-    let features = reqwest::get(FIND_CLASS_URL)
-        .await
-        .context("Failed to fetch data")?
-        .json::<FindClassRes>()
-        .await
-        .context("Failed to parse JSON")?
-        .data
-        .features;
-
+    let features = get_classes().await?;
+    
     // console_log!("Fetched data {:#?}", features);
 
     let mut statements = Vec::new();
@@ -23,8 +17,7 @@ pub async fn init_db(db: &D1Database) -> Result<()> {
     let mut rooms = Vec::new();
     let mut time_slots = Vec::new();
 
-    for feature in features {
-        let props = feature.properties;
+    for props in features {
 
         // Process building
         let building = BuildingInfo {
