@@ -1,5 +1,3 @@
-use std::str::FromStr;
-
 use crate::{
     embed::{
         builder::EmbedBuilder,
@@ -10,11 +8,12 @@ use crate::{
 };
 use anyhow::Result;
 use chrono::{Datelike, Local, NaiveTime, Timelike};
+use chrono_tz::America::Toronto;
 use d1::{get_open_classes, Params, SQLRes};
 use reqwest::StatusCode;
 use serde_json::json;
+use std::str::FromStr;
 use worker::{D1Database, Response};
-use chrono_tz::America::Toronto;
 
 pub async fn find_class(db: D1Database, interaction: Interaction) -> Result<Response> {
     let options = interaction.data.unwrap().options;
@@ -81,18 +80,31 @@ pub async fn find_class(db: D1Database, interaction: Interaction) -> Result<Resp
 
     let res = get_open_classes(db, params).await?;
 
-    let res = res.iter().take(6).collect::<Vec<_>>();
-
-    if res.len() == 0 {
-        return make_res(StatusCode::OK, json!({ "type": 4, "data": { "content": "No classes found :/" }}));
-    }
     make_res(
         StatusCode::OK,
         json!({ "type": 4, "data": { "message": msg, "embeds": [build_embed(res)]}}),
     )
 }
 
-fn build_embed(res: Vec<&SQLRes>) -> Embed {
+fn build_embed(res: Vec<SQLRes>) -> Embed {
+    if res.len() == 0 {
+        let embed = EmbedBuilder::new()
+            .title("No open classes :(((((")
+            .color(0x150578)
+            .footer(EmbedFooter {
+                text: "manas manas manas".to_string(),
+                icon_url: Some(
+                    "https://pbs.twimg.com/profile_images/1467714157680070663/HYty_41-_400x400.jpg"
+                        .to_string(),
+                ),
+                proxy_icon_url: None,
+            });
+
+        return embed.build();
+    }
+
+    let classes = res.iter().take(6).collect::<Vec<_>>();
+
     let mut embed = EmbedBuilder::new()
         .title(format!("Open Classes for {}", res[0].building_code))
         .color(0x150578)
@@ -105,7 +117,7 @@ fn build_embed(res: Vec<&SQLRes>) -> Embed {
             proxy_icon_url: None,
         });
 
-    for class in res {
+    for class in classes {
         let start_time = class.start_time.split(":").collect::<Vec<_>>();
         let start_time = NaiveTime::from_hms_opt(
             start_time[0].parse().unwrap(),
