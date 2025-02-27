@@ -38,10 +38,10 @@ wrangler publish
 ## Design Choices
 
 ### Architecture
-- Command-based Discord bot using Serenity
-- Asynchronous classroom data fetching
-- In-memory caching of classroom schedules
-- Periodic updates from UW Open Data API
+- Command-based Discord bot using custom bindings
+- Fully built on cloudflare workers
+- DB using Cloudflare D1 SQL
+- Periodic updates from UW Open Data API using cron scheduling
 
 ### Technology Stack
 - Rust
