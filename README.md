@@ -13,7 +13,6 @@ cd open-class-discord
 
 2. Create the .env and populate the environment variables
 ```bash
-touch .env
 echo UWATERLOO_API_KEY="<INSERT_API_KEY>" >> .env
 echo DISCORD_APPLICATION_ID="<INSERT_APPLICATION_ID>" >> .env
 echo DISCORD_PUBLIC_KEY="<INSERT_PUBLIC_KEY>" >> .env
