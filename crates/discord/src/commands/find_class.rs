@@ -111,7 +111,7 @@ fn build_embed(res: Vec<SQLRes>) -> Embed {
         .title(format!("Open Classes for {}", res[0].building_code))
         .color(0x150578)
         .footer(EmbedFooter {
-            text: format!("Showing {} of {} classes", 6, len),
+            text: format!("Showing {} of {} classes", res.len(), len),
             icon_url: Some(
                 "https://pbs.twimg.com/profile_images/1467714157680070663/HYty_41-_400x400.jpg"
                     .to_string(),
