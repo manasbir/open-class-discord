@@ -79,7 +79,7 @@ pub async fn get_open_classes(db: D1Database, params: Params) -> Result<Vec<SQLR
          JOIN floors f ON r.floor_id = f.floor_id
          JOIN buildings b ON b.building_code = r.building_code
          WHERE 1=1 {}
-         ORDER BY t.start_time ASC, t.end_time DESC",
+         ORDER BY t.end_time DESC, t.start_time ASC",
         query_string.join(" ")
     );
 
