@@ -71,7 +71,6 @@ pub async fn get_open_classes(db: D1Database, params: Params) -> Result<Vec<SQLR
         "AND r.room_number = ?",
     );
 
-
     let query = format!(
         "SELECT DISTINCT r.room_id, r.floor_id, f.floor_number, r.building_code, r.room_number, 
         t.start_time, t.end_time, t.day
