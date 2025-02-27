@@ -12,7 +12,7 @@ use chrono_tz::America::Toronto;
 use d1::{get_open_classes, Params, SQLRes};
 use reqwest::StatusCode;
 use serde_json::json;
-use std::str::FromStr;
+use std::{fmt::format, str::FromStr};
 use worker::{D1Database, Response};
 
 pub async fn find_class(db: D1Database, interaction: Interaction) -> Result<Response> {
@@ -103,13 +103,15 @@ fn build_embed(res: Vec<SQLRes>) -> Embed {
         return embed.build();
     }
 
+    let len = res.len();
+
     let classes = res.iter().take(6).collect::<Vec<_>>();
 
     let mut embed = EmbedBuilder::new()
         .title(format!("Open Classes for {}", res[0].building_code))
         .color(0x150578)
         .footer(EmbedFooter {
-            text: "manas manas manas".to_string(),
+            text: format!("Showing {} of {} classes", 6, len),
             icon_url: Some(
                 "https://pbs.twimg.com/profile_images/1467714157680070663/HYty_41-_400x400.jpg"
                     .to_string(),
