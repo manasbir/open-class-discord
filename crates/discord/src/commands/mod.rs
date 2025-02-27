@@ -54,6 +54,12 @@ pub const COMMANDS: [Command; 2] = [
                 autocomplete: false,
                 description: "start time (HH:MM)",
             },
+            CommandOptions {
+                r#type: 3,
+                name: "end_time",
+                autocomplete: false,
+                description: "start time (HH:MM)",
+            },
         ]),
     },
     Command {
