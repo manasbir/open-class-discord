@@ -47,7 +47,7 @@ wrangler publish
 - Rust
 - SQL (Cloudflare D1)
 
-## Technical Challenges
+<!-- ## Technical Challenges -->
 
 <!-- ### Solved Challenges
 1. Rate Limiting
