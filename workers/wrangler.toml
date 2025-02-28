@@ -12,3 +12,6 @@ crons = [ "0 5 * * *" ]
 binding = "DB" # i.e. available in your Worker on env.DB
 database_name = "test1"
 database_id = "60cbf05d-acbf-4d6f-af76-bfa31b18a6da"
+
+[observability]
+enabled = true
