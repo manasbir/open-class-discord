@@ -88,8 +88,11 @@ pub(crate) fn insert_time_slots(
         let stmt = db.prepare(
             "INSERT INTO time_slots (slot_id, room_id, day, start_time, end_time)
             VALUES (?1, ?2, ?3, ?4, ?5)
-            ON CONFLICT (room_id, day, start_time) DO UPDATE
-            SET start_time = excluded.start_time, end_time = excluded.end_time",
+            ON CONFLICT (slot_id) DO UPDATE 
+            SET room_id = excluded.room_id,
+            day = excluded.day,
+            start_time = excluded.start_time,
+            end_time = excluded.end_time;",
         );
 
         let mut start_time = slot.start_time.clone();

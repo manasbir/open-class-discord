@@ -28,20 +28,9 @@ pub async fn find_class(db: D1Database, interaction: Interaction) -> Result<Resp
     let end_time = match options.get("end_time") {
         Some(end_time) => match NaiveTime::from_str(&end_time.value) {
             Ok(end_time) => {
-                if end_time.minute() < 10 {
-                    Some(format!(
-                        "{}:0{}",
-                        (end_time.hour() % 12) + 12,
-                        end_time.minute()
-                    ))
-                } else {
-                    Some(format!(
-                        "{}:{}",
-                        (end_time.hour() % 12) + 12,
-                        end_time.minute()
-                    ))
-                }
-            }
+                let time = end_time.with_hour(end_time.hour() % 12 + 12).unwrap();
+                Some(time.format("%H:%M").to_string())
+            },
             Err(_) => {
                 msg = Some("End time did not work");
                 None
@@ -51,20 +40,15 @@ pub async fn find_class(db: D1Database, interaction: Interaction) -> Result<Resp
     };
     let start_time = match options.get("start_time") {
         Some(time) => {
+            // TODO make nicer
             let time = NaiveTime::from_str(&time.value)?;
-            if time.minute() < 10 {
-                format!("{}:0{}", (time.hour() % 12) + 12, time.minute())
-            } else {
-                format!("{}:{}", (time.hour() % 12) + 12, time.minute())
-            }
+            let time = time.with_hour(time.hour() % 12 + 12).unwrap();
+            let time = round_up(time);
+            time.format("%H:%M").to_string()
         }
         None => {
-            let time = Local::now().with_timezone(&Toronto).time();
-            if time.minute() < 10 {
-                format!("{}:0{}", time.hour(), time.minute())
-            } else {
-                format!("{}:{}", time.hour(), time.minute())
-            }
+            let time = round_up(Local::now().with_timezone(&Toronto).time());
+            time.format("%H:%M").to_string()
         }
     };
     let day = Local::now().with_timezone(&Toronto).weekday().to_string();
@@ -146,4 +130,15 @@ fn build_embed(res: Vec<SQLRes>) -> Embed {
     }
 
     embed.build()
+}
+
+
+fn round_up(time: NaiveTime) -> NaiveTime {
+    if time.minute() <= 20 {
+        NaiveTime::from_hms_opt(time.hour(), 20, 0).unwrap()
+    } else if  time.minute() <= 50 {
+        NaiveTime::from_hms_opt(time.hour(), 50, 0).unwrap()
+    } else {
+        time
+    }
 }
