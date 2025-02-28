@@ -85,6 +85,10 @@ pub(crate) fn insert_time_slots(
     slots: &[TimeSlots],
 ) -> Result<()> {
     for slot in slots {
+        if slot.room_id == "MC-4-4044" {
+            continue;
+        }
+
         let stmt = db.prepare(
             "INSERT INTO time_slots (slot_id, room_id, day, start_time, end_time)
             VALUES (?1, ?2, ?3, ?4, ?5)
