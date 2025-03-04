@@ -19,7 +19,7 @@ echo DISCORD_PUBLIC_KEY="<INSERT_PUBLIC_KEY>" >> .env
 echo DISCORD_TOKEN="<INSERT_BOT_TOKEN>" >> .env
 echo ADMIN_DISCORD_ID="<INSERT_YOUR_DISCORD_ID>" >> .env
 
-echo > /workers/.dev.vars < .env
+cat .env > /workers/.dev.vars
 ```
 
 3. Register the commands with Discord
@@ -35,7 +35,7 @@ cd ../workers
 wrangler publish
 ```
 
-## Design Choices
+## About the code
 
 ### Architecture
 - Command-based Discord bot using custom bindings
