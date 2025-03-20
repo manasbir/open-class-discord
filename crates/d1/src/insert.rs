@@ -87,7 +87,7 @@ pub(crate) fn insert_time_slots(
     for slot in slots {
         let day = slot.day.as_str();
         let stmt = db.prepare(
-            "DELETE FROM time_slots WHERE day = ?2",
+            "DELETE FROM time_slots WHERE day = ?",
         );
 
         stmt.bind(&[day.into()])?;
