@@ -46,12 +46,12 @@ pub async fn refresh_db(db: &D1Database) -> Result<()> {
                 .to_id();
 
                 // Process time slots
-                for (idx, schedule) in room_data.schedule.iter().enumerate() {
+                for schedule in room_data.schedule {
                     let day = schedule.weekday.clone()[..3].to_string();
 
-                    for slot in schedule.slots.clone() {
-                        let start_time = slot.start_time;
-                        let end_time = slot.end_time;
+                    for (idx, slot) in schedule.slots.iter().enumerate() {
+                        let start_time = slot.start_time.clone();
+                        let end_time = slot.end_time.clone();
                         let slot = TimeSlots {
                             idx: idx.try_into().unwrap(),
                             room_id: room_id.clone(),
