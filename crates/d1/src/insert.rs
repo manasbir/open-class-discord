@@ -85,6 +85,14 @@ pub(crate) fn insert_time_slots(
     slots: &[TimeSlots],
 ) -> Result<()> {
     for slot in slots {
+        let day = slot.day.as_str();
+        let stmt = db.prepare(
+            "DELETE FROM time_slots WHERE day = ?2",
+        );
+
+        stmt.bind(&[day.into()])?;
+
+
         if slot.room_id == "MC-4-4044" {
             continue;
         }
