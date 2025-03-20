@@ -85,7 +85,7 @@ pub(crate) fn insert_time_slots(
     slots: &[TimeSlots],
 ) -> Result<()> {
     let stmt = db.prepare(
-        "DELETE FROM time_slots WHERE",
+        "DELETE FROM time_slots",
     );
 
     console_log!("Deleted time slots");

@@ -46,6 +46,7 @@ pub async fn init_db(db: &D1Database) -> Result<()> {
                 let room_id = room.to_id();
 
                 // Process time slots
+                // TODO WRAP AS FUNCTION
                 for schedule in room_data.schedule.iter() {
                     let day = schedule.weekday.clone()[..3].to_string();
 
