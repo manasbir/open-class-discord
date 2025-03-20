@@ -104,7 +104,7 @@ pub(crate) fn insert_time_slots(
             SET room_id = excluded.room_id,
             day = excluded.day,
             start_time = excluded.start_time,
-            end_time = excluded.end_time;",
+            end_time = excluded.end_time",
         );
 
         let mut start_time = slot.start_time.clone();
