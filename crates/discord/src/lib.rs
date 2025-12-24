@@ -39,7 +39,7 @@ pub async fn parse_event(req: Request, env: Env) -> Result<Response> {
         .get("X-Signature-Timestamp")?
         .ok_or_else(|| anyhow!("no timestamp"))?;
 
-    let mut interaction = req.json::<Interaction>().await?;
+    let mut interaction = req.clone()?.json::<Interaction>().await?;
     interaction.timestamp = Some(timestamp);
 
     res(env, interaction).await
