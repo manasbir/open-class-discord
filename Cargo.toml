@@ -4,5 +4,5 @@ members = [
     "workers",
     "crates/*"
 ]
-default-members = []
+
 resolver = "2"
