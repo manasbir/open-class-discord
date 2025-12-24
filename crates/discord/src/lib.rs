@@ -32,14 +32,14 @@ pub async fn parse_event(req: Request, env: Env) -> Result<Response> {
     let bytes = req.bytes().await?;
     let headers = req.headers();
 
-    verify_sig(key, headers, bytes)?;
+    verify_sig(key, headers, &bytes)?;
 
     let timestamp = req
         .headers()
         .get("X-Signature-Timestamp")?
         .ok_or_else(|| anyhow!("no timestamp"))?;
 
-    let mut interaction = req.clone()?.json::<Interaction>().await?;
+    let mut interaction = serde_json::from_slice::<Interaction>(bytes.as_slice())?;
     interaction.timestamp = Some(timestamp);
 
     res(env, interaction).await
@@ -72,7 +72,7 @@ async fn parse_commands(env: Env, interaction: Interaction) -> Result<Response> 
     }
 }
 
-fn verify_sig(public_key: VerifyingKey, headers: &Headers, bytes: Vec<u8>) -> Result<()> {
+fn verify_sig(public_key: VerifyingKey, headers: &Headers, bytes: &Vec<u8>) -> Result<()> {
     let timestamp = headers
         .get("X-Signature-Timestamp")?
         .ok_or_else(|| anyhow!("could not get signature"))?
