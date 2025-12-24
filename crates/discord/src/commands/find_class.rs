@@ -30,7 +30,7 @@ pub async fn find_class(db: D1Database, interaction: Interaction) -> Result<Resp
             Ok(end_time) => {
                 let time = end_time.with_hour(end_time.hour() % 12 + 12).unwrap();
                 Some(time.format("%H:%M").to_string())
-            },
+            }
             Err(_) => {
                 msg = Some("End time did not work");
                 None
@@ -132,11 +132,10 @@ fn build_embed(res: Vec<SQLRes>) -> Embed {
     embed.build()
 }
 
-
 fn round_up(time: NaiveTime) -> NaiveTime {
     if time.minute() <= 20 {
         NaiveTime::from_hms_opt(time.hour(), 20, 0).unwrap()
-    } else if  time.minute() <= 50 {
+    } else if time.minute() <= 50 {
         NaiveTime::from_hms_opt(time.hour(), 50, 0).unwrap()
     } else {
         time

@@ -16,9 +16,7 @@ pub async fn scheduled(_event: ScheduledEvent, env: Env, _ctx: ScheduleContext) 
 async fn fetch(req: Request, env: Env, _ctx: Context) -> Result<Response> {
     console_error_panic_hook::set_once();
 
-    let mut req = req.clone()?;
-
-    match parse_event(&mut req, env).await {
+    match parse_event(req, env).await {
         Ok(res) => Ok(res),
         Err(e) => {
             console_log!("Failed to respond to interaction: {:?}", e);

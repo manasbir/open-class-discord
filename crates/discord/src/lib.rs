@@ -19,7 +19,7 @@ pub fn make_res(code: StatusCode, body: Value) -> Result<Response> {
         .from_json(&body)?)
 }
 
-pub async fn parse_event(req: &mut Request, env: Env) -> Result<Response> {
+pub async fn parse_event(req: Request, env: Env) -> Result<Response> {
     let key = VerifyingKey::from_bytes(
         &hex::decode(env.secret("DISCORD_PUBLIC_KEY")?.to_string())
             .unwrap()
@@ -28,8 +28,8 @@ pub async fn parse_event(req: &mut Request, env: Env) -> Result<Response> {
     )
     .unwrap();
 
-    let mut req2 = req.clone()?;
-    let bytes = req2.bytes().await?;
+    let mut req = req.clone()?;
+    let bytes = req.bytes().await?;
     let headers = req.headers();
 
     verify_sig(key, headers, bytes)?;

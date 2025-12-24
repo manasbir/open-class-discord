@@ -84,16 +84,13 @@ pub(crate) fn insert_time_slots(
     statements: &mut Vec<D1PreparedStatement>,
     slots: &[TimeSlots],
 ) -> Result<()> {
-    let stmt = db.prepare(
-        "DELETE FROM time_slots",
-    );
+    let stmt = db.prepare("DELETE FROM time_slots");
 
     console_log!("Deleted time slots");
 
     statements.push(stmt);
 
     for slot in slots {
-
         if slot.room_id == "MC-4-4044" {
             continue;
         }
