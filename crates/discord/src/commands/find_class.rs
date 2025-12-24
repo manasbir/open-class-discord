@@ -12,7 +12,7 @@ use chrono_tz::America::Toronto;
 use d1::{get_open_classes, Params, SQLRes};
 use reqwest::StatusCode;
 use serde_json::json;
-use std::{fmt::format, str::FromStr};
+use std::str::FromStr;
 use worker::{D1Database, Response};
 
 pub async fn find_class(db: D1Database, interaction: Interaction) -> Result<Response> {
@@ -71,7 +71,7 @@ pub async fn find_class(db: D1Database, interaction: Interaction) -> Result<Resp
 }
 
 fn build_embed(res: Vec<SQLRes>) -> Embed {
-    if res.len() == 0 {
+    if res.is_empty() {
         let embed = EmbedBuilder::new()
             .title("No open classes :(((((")
             .color(0x150578)
